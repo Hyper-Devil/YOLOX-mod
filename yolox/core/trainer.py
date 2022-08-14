@@ -163,8 +163,9 @@ class Trainer:
         if self.args.occupy:
             occupy_mem(self.local_rank)
 
+        # 加入GAM后报错
         if self.is_distributed:
-            model = DDP(model, device_ids=[self.local_rank], broadcast_buffers=False)
+            model = DDP(model, device_ids=[self.local_rank], broadcast_buffers=False, find_unused_parameters=True)
 
         if self.use_model_ema:
             self.ema_model = ModelEMA(model, 0.9998)

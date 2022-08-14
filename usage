@@ -10,7 +10,7 @@ python -m yolox.tools.eval -n  yolox-nano -c /home/mct/whd/YOLOX/YOLOX_outputs/d
 tensorboard --logdir=./YOLOX_outputs
 
 docker训练:
-docker run -it -p 2580:22 --gpus='"device=0,1"' --shm-size 64g --ipc=host --name whd_pytorch -v /tmp/.X11-unix/:/tmp/.X11-unix/ -e DISPLAY=$DISPLAY -v /home/mct/whd:/root/ -v /mnt/sdb1/whd/:/root/data cnstark/pytorch:1.8.1-py3.9.12-cuda11.1-devel-ubuntu20.04 /bin/bash
+docker run -it -p 2580:22 --gpus='"device=2,3"' --shm-size 64g --ipc=host --name whd_pytorch -v /tmp/.X11-unix/:/tmp/.X11-unix/ -e DISPLAY=$DISPLAY -v /home/mct/whd:/root/ -v /mnt/sdb1/whd/:/root/data cnstark/pytorch:1.8.1-py3.9.12-cuda11.1-devel-ubuntu20.04 /bin/bash
 cd ~/YOLOX-docker
 apt-get install libprotobuf-dev protobuf-compiler
 apt install libgl1-mesa-glx
@@ -18,3 +18,6 @@ apt-get install libglib2.0-dev
 pip3 install -v -e .
 python -m yolox.tools.train -f /root/YOLOX-docker/exps/example/yolox_voc/yolox_voc_tiny.py -d 2 -b 16 --fp16 -o
 tensorboard --logdir=./YOLOX_outputs
+
+docker commit 4f43 whd:0814
+docker run -it -p 2580:22 --gpus='"device=2,3"' --shm-size 64g --ipc=host --name whd_device2,3 -v /tmp/.X11-unix/:/tmp/.X11-unix/ -e DISPLAY=$DISPLAY -v /home/mct/whd:/root/ -v /mnt/sdb1/whd/:/root/data whd:0814 /bin/bash

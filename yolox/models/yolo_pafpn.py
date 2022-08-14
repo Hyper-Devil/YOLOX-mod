@@ -8,6 +8,37 @@ import torch.nn as nn
 from .darknet import CSPDarknet
 from .network_blocks import BaseConv, CSPLayer, DWConv
 
+class GAM_Attention(nn.Module):
+    def __init__(self, in_channels, out_channels, rate=4):
+        super(GAM_Attention, self).__init__()
+
+        self.channel_attention = nn.Sequential(
+            nn.Linear(in_channels, int(in_channels / rate)),
+            nn.ReLU(inplace=True),
+            nn.Linear(int(in_channels / rate), in_channels)
+        )
+
+        self.spatial_attention = nn.Sequential(
+            nn.Conv2d(in_channels, int(in_channels / rate), kernel_size=7, padding=3),
+            nn.BatchNorm2d(int(in_channels / rate)),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(int(in_channels / rate), out_channels, kernel_size=7, padding=3),
+            nn.BatchNorm2d(out_channels)
+        )
+
+    def forward(self, x):
+        b, c, h, w = x.shape
+        x_permute = x.permute(0, 2, 3, 1).view(b, -1, c)   #b c h w -> b h w c ->  b h*w c
+        x_att_permute = self.channel_attention(x_permute).view(b, h, w, c)
+        x_channel_att = x_att_permute.permute(0, 3, 1, 2)  # b h w c -> b c h w
+
+        x = x * x_channel_att
+
+        x_spatial_att = self.spatial_attention(x).sigmoid()
+        out = x * x_spatial_att
+
+        return out
+
 
 class YOLOPAFPN(nn.Module):
     """
@@ -79,6 +110,11 @@ class YOLOPAFPN(nn.Module):
             depthwise=depthwise,
             act=act,
         )
+        # 如果在yolox-s 640 下，012对应 128 256 512
+        # in_channels=[256, 512, 1024]
+        self.GAM_0 = GAM_Attention(int(in_channels[0] * width), int(in_channels[0] * width), rate=16) 
+        self.GAM_1 = GAM_Attention(int(in_channels[1] * width), int(in_channels[1] * width), rate=32)  
+        self.GAM_2 = GAM_Attention(int(in_channels[2] * width), int(in_channels[2] * width), rate=64)  
 
     def forward(self, input):
         """
@@ -94,18 +130,26 @@ class YOLOPAFPN(nn.Module):
         features = [out_features[f] for f in self.in_features]
         [x2, x1, x0] = features
 
+        # 0814注：这里1024->512/32是width=1.0
+        # 这里的32 16 表示特征图尺寸  例如640/32=20x20
         fpn_out0 = self.lateral_conv0(x0)  # 1024->512/32
         f_out0 = self.upsample(fpn_out0)  # 512/16
         f_out0 = torch.cat([f_out0, x1], 1)  # 512->1024/16
+        # 第一处GAM
+        f_out0 = self.GAM_2(f_out0) 
         f_out0 = self.C3_p4(f_out0)  # 1024->512/16
 
         fpn_out1 = self.reduce_conv1(f_out0)  # 512->256/16
         f_out1 = self.upsample(fpn_out1)  # 256/8
         f_out1 = torch.cat([f_out1, x2], 1)  # 256->512/8
+        # 第二处GAM
+        f_out1 = self.GAM_1(f_out1)       
         pan_out2 = self.C3_p3(f_out1)  # 512->256/8
 
         p_out1 = self.bu_conv2(pan_out2)  # 256->256/16
         p_out1 = torch.cat([p_out1, fpn_out1], 1)  # 256->512/16
+        # 第三处GAM
+        # pan_out1 = self.GAM_1(p_out1)
         pan_out1 = self.C3_n3(p_out1)  # 512->512/16
 
         p_out0 = self.bu_conv1(pan_out1)  # 512->512/32
