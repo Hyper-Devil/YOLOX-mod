@@ -13,9 +13,14 @@ class Exp(MyExp):
         super(Exp, self).__init__()
         self.num_classes = 3
         self.depth = 0.33
-        self.width = 0.50
-        self.warmup_epochs = 1
+        self.width = 0.375
+        self.input_size = (416, 416)
+        self.mosaic_scale = (0.5, 1.5)
+        self.random_size = (10, 20)
+        self.test_size = (416, 416)
+        self.enable_mixup = False
 
+        self.warmup_epochs = 1
         # ---------- transform config ------------ #
         self.mosaic_prob = 1.0
         self.mixup_prob = 1.0
