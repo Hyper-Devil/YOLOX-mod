@@ -32,7 +32,8 @@ class Exp(MyExp):
                     m.eps = 1e-3
                     m.momentum = 0.03
         if "model" not in self.__dict__:
-            from yolox.models import YOLOX, YOLOPAFPN_original, YOLOXHead
+            from yolox.models import YOLOX, YOLOXHead
+            from yolox.models import YOLOPAFPN_original as YOLOPAFPN
             in_channels = [256, 512, 1024]
             # NANO model use depthwise = True, which is main difference.
             backbone = YOLOPAFPN(
