@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+from torch.nn.parameter import Parameter
 import math
 
 # 计算量过大，效果一般，舍弃
@@ -67,14 +68,14 @@ class eca_layer(nn.Module):
 
 
 # ICASSP2021 论文中比ECA效果好
-class sa_layer(nn.Module):
+class SA(nn.Module):
     """Constructs a Channel Spatial Group module.
     Args:
         k_size: Adaptive selection of kernel size
     """
 
-    def __init__(self, channel, groups=64):
-        super(sa_layer, self).__init__()
+    def __init__(self, channel, groups=8):
+        super(SA, self).__init__()
         self.groups = groups
         self.avg_pool = nn.AdaptiveAvgPool2d(1)
         self.cweight = Parameter(torch.zeros(1, channel // (2 * groups), 1, 1))

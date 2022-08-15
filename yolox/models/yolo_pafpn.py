@@ -4,10 +4,10 @@
 
 import torch
 import torch.nn as nn
-
+from torch.nn.parameter import Parameter
 from .darknet import CSPDarknet
 from .network_blocks import BaseConv, CSPLayer, DWConv
-from .attention import GAM_Attention, sa_layer, eca_layer, Channel_NAM, NAM
+from .attention import SA
 
 class YOLOPAFPN_original(nn.Module):
     """
@@ -189,10 +189,13 @@ class YOLOPAFPN(nn.Module):
         )
         # 如果在yolox-s 640 下，012对应 128 256 512
         # in_channels=[256, 512, 1024]
-        self.GAM_0 = GAM_Attention(int(in_channels[0] * width), int(in_channels[0] * width), rate=16) 
-        self.GAM_1 = GAM_Attention(int(in_channels[1] * width), int(in_channels[1] * width), rate=32)  
+        self.SA_0 = SA(int(in_channels[0] * width))
+        self.SA_1 = SA(int(in_channels[1] * width))
+        self.SA_2 = SA(int(in_channels[2] * width))
+        # self.GAM_0 = GAM_Attention(int(in_channels[0] * width), int(in_channels[0] * width), rate=16) 
+        # self.GAM_1 = GAM_Attention(int(in_channels[1] * width), int(in_channels[1] * width), rate=32)  
         # self.GAM_2 = GAM_Attention(int(in_channels[2] * width), int(in_channels[2] * width), rate=64)  
-
+        
     def forward(self, input):
         """
         Args:
@@ -207,27 +210,25 @@ class YOLOPAFPN(nn.Module):
         features = [out_features[f] for f in self.in_features]
         [x2, x1, x0] = features
 
+        x2=self.SA_0(x2)
+        x1=self.SA_1(x1)
+        x0=self.SA_2(x0)
+
         # 0814注：这里1024->512/32是width=1.0
         # 这里的32 16 表示特征图尺寸  例如640/32=20x20
         fpn_out0 = self.lateral_conv0(x0)  # 1024->512/32
         f_out0 = self.upsample(fpn_out0)  # 512/16
         f_out0 = torch.cat([f_out0, x1], 1)  # 512->1024/16
         f_out0 = self.C3_p4(f_out0)  # 1024->512/16
-        # 第一处GAM
-        f_out0 = self.GAM_1(f_out0) 
 
         fpn_out1 = self.reduce_conv1(f_out0)  # 512->256/16
         f_out1 = self.upsample(fpn_out1)  # 256/8
         f_out1 = torch.cat([f_out1, x2], 1)  # 256->512/8
-        pan_out2 = self.C3_p3(f_out1)  # 512->256/8
-        # 第二处GAM
-        pan_out2 = self.GAM_0(pan_out2)       
+        pan_out2 = self.C3_p3(f_out1)  # 512->256/8      
 
         p_out1 = self.bu_conv2(pan_out2)  # 256->256/16
         p_out1 = torch.cat([p_out1, fpn_out1], 1)  # 256->512/16
         pan_out1 = self.C3_n3(p_out1)  # 512->512/16
-        # 第三处GAM
-        # pan_out1 = self.GAM_1(pan_out1)
 
         p_out0 = self.bu_conv1(pan_out1)  # 512->512/32
         p_out0 = torch.cat([p_out0, fpn_out0], 1)  # 512->1024/32
