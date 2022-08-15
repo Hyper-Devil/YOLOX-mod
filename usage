@@ -20,4 +20,4 @@ python -m yolox.tools.train -f /root/YOLOX-docker/exps/example/yolox_voc/yolox_v
 tensorboard --logdir=./YOLOX_outputs
 
 docker commit 4f43 whd:0814
-docker run -it -p 2580:22 --gpus='"device=2,3"' --shm-size 64g --ipc=host --name whd_device2,3 -v /tmp/.X11-unix/:/tmp/.X11-unix/ -e DISPLAY=$DISPLAY -v /home/mct/whd:/root/ -v /mnt/sdb1/whd/:/root/data whd:0814 /bin/bash
+docker run -it -p 2582:22 --gpus='"device=0,1,2,3"' --shm-size 64g --ipc=host --name whd_device_all -v /tmp/.X11-unix/:/tmp/.X11-unix/ -e DISPLAY=$DISPLAY -v /home/mct/whd:/root/ -v /mnt/sdb1/whd/:/root/data whd:0814 /bin/bash
