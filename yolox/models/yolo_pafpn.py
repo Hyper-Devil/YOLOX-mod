@@ -7,7 +7,7 @@ import torch.nn as nn
 
 from .darknet import CSPDarknet
 from .network_blocks import BaseConv, CSPLayer, DWConv
-from .attention import GAM_Attention, ECA
+from .attention import GAM_Attention, sa_layer, eca_layer, Channel_NAM, NAM
 
 class YOLOPAFPN_original(nn.Module):
     """
@@ -191,7 +191,7 @@ class YOLOPAFPN(nn.Module):
         # in_channels=[256, 512, 1024]
         self.GAM_0 = GAM_Attention(int(in_channels[0] * width), int(in_channels[0] * width), rate=16) 
         self.GAM_1 = GAM_Attention(int(in_channels[1] * width), int(in_channels[1] * width), rate=32)  
-        self.GAM_2 = GAM_Attention(int(in_channels[2] * width), int(in_channels[2] * width), rate=64)  
+        # self.GAM_2 = GAM_Attention(int(in_channels[2] * width), int(in_channels[2] * width), rate=64)  
 
     def forward(self, input):
         """
@@ -227,7 +227,7 @@ class YOLOPAFPN(nn.Module):
         p_out1 = torch.cat([p_out1, fpn_out1], 1)  # 256->512/16
         pan_out1 = self.C3_n3(p_out1)  # 512->512/16
         # 第三处GAM
-        pan_out1 = self.GAM_1(pan_out1)
+        # pan_out1 = self.GAM_1(pan_out1)
 
         p_out0 = self.bu_conv1(pan_out1)  # 512->512/32
         p_out0 = torch.cat([p_out0, fpn_out0], 1)  # 512->1024/32
