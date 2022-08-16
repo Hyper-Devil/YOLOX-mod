@@ -77,7 +77,7 @@ class gnconv(nn.Module):
         for i in range(self.order -1):
             x = self.pws[i](x) * dw_list[i+1]
 
-        x = self.proj_out(x) #修改为2倍
+        x = self.proj_out(x)
 
         return x
 
@@ -90,9 +90,9 @@ class Block(nn.Module):
         self.norm1 = LayerNorm(dim, eps=1e-6, data_format='channels_first')
         self.gnconv = gnconv(dim,order=order) # depthwise conv
         self.norm2 = LayerNorm(dim, eps=1e-6)
-        self.pwconv1 = nn.Linear(dim, 2 * dim) # pointwise/1x1 convs, implemented with linear layers
+        self.pwconv1 = nn.Linear(dim, int(0.5 * dim)) # pointwise/1x1 convs, implemented with linear layers
         self.act = nn.GELU()
-        self.pwconv2 = nn.Linear(2 * dim, dim)
+        self.pwconv2 = nn.Linear(int(0.5 * dim), dim)
 
         self.gamma1 = nn.Parameter(layer_scale_init_value * torch.ones(dim), 
                                     requires_grad=True) if layer_scale_init_value > 0 else None

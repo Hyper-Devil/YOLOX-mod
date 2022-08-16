@@ -4,7 +4,7 @@
 
 import torch
 import torch.nn as nn
-
+from .hornet import Block, gnconv, LayerNorm
 
 class SiLU(nn.Module):
     """export-friendly version of nn.SiLU()"""
@@ -75,7 +75,88 @@ class DWConv(nn.Module):
         x = self.dconv(x)
         return self.pconv(x)
 
+class Bconv(nn.Module):
+    def __init__(self,ch_in,ch_out,k,s):
+        '''
+        :param ch_in: 输入通道数
+        :param ch_out: 输出通道数
+        :param k: 卷积核尺寸
+        :param s: 步长
+        :return:
+        '''
+        super(Bconv, self).__init__()
+        self.conv=nn.Conv2d(ch_in,ch_out,k,s,padding=k//2)
+        self.bn=nn.BatchNorm2d(ch_out)
+        self.act=nn.SiLU()
+    def forward(self,x):
+        '''
+        :param x: 输入
+        :return:
+        '''
+        return self.act(self.bn(self.conv(x)))
 
+class MPConv(nn.Module):
+    def __init__(self,ch_in,ch_out):
+        '''
+        :param ch_in: 输如通道
+        :param ch_out: 这里给的是中间层的输出通道
+        '''
+        super(MPConv, self).__init__()
+        #分支一
+        self.conv1=nn.Sequential(
+            nn.MaxPool2d(2,2),
+            Bconv(ch_in,ch_out,1,1),
+        )
+        #分支二
+        self.conv2=nn.Sequential(
+            Bconv(ch_in,ch_out,1,1),
+            Bconv(ch_out,ch_out,3,2),
+        )
+
+    def forward(self,x):
+        #分支一输出
+        output1=self.conv1(x)
+
+        #分支二输出
+        output2=self.conv2(x)
+        return torch.cat((output1,output2),dim=1)
+
+class E_ELAN(nn.Module):
+    def __init__(self,ch_in,ch_out,flg=False):
+        '''
+        :param ch_in: 输入通道
+        :param ch_out: 这里给的是中间层的输出通道
+        :param flg: 判断是否为backbone的最后一层，因为这里的输出通道数有所改变
+        '''
+        super(E_ELAN, self).__init__()
+        # 卷积类型一
+        self.conv1=Bconv(ch_in,ch_out,k=1,s=1)
+        # 卷积类型二
+        self.conv2=Bconv(ch_out,ch_out,k=3,s=1)
+
+        #cat之后的卷积
+        if flg:
+            self.conv3=Bconv(2*ch_in,ch_in,k=1,s=1)
+        else:
+            self.conv3=Bconv(2*ch_in,2*ch_in,k=1,s=1)
+
+    def forward(self,x):
+        '''
+        :param x: 输入
+        :return:
+        '''
+        #分支一输出
+        output1=self.conv1(x)
+
+        #分支二输出
+        output2_1=self.conv1(x)
+        output2_2=self.conv2(output2_1)
+        output2_3=self.conv2(output2_2)
+        output2_4=self.conv2(output2_3)
+        output2_5=self.conv2(output2_4)
+        output_cat=torch.cat((output1, output2_1, output2_3, output2_5), dim=1)
+        return self.conv3(output_cat)
+        
 class Bottleneck(nn.Module):
     # Standard bottleneck
     def __init__(

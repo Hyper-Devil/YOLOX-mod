@@ -14,7 +14,7 @@ class Exp(MyExp):
         super(Exp, self).__init__()
         self.num_classes = 3
         self.depth = 0.33
-        self.width = 0.125
+        self.width = 0.25
         self.mosaic_scale = (0.5, 1.5)
         self.random_size = (10, 20)
         self.input_size = (416, 416)
@@ -32,8 +32,7 @@ class Exp(MyExp):
                     m.eps = 1e-3
                     m.momentum = 0.03
         if "model" not in self.__dict__:
-            from yolox.models import YOLOX, YOLOXHead
-            from yolox.models import YOLOPAFPN_original as YOLOPAFPN
+            from yolox.models import YOLOX, YOLOPAFPN, YOLOXHead
             in_channels = [256, 512, 1024]
             # NANO model use depthwise = True, which is main difference.
             backbone = YOLOPAFPN(

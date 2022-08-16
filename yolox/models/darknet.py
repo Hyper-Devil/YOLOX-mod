@@ -4,7 +4,7 @@
 
 from torch import nn
 
-from .network_blocks import BaseConv, CSPLayer, DWConv, Focus, ResLayer, SPPBottleneck
+from .network_blocks import MPConv, Bconv, E_ELAN, BaseConv, CSPLayer, DWConv, Focus, ResLayer, SPPBottleneck
 from .hornet import Block, gnconv, LayerNorm
 
 
@@ -113,65 +113,67 @@ class CSPDarknet(nn.Module):
         base_depth = max(round(dep_mul * 3), 1)  # 3
         
         # hornet
-        self.gnconv = gnconv
-        self.gnblock_dark2 = Block(dim=base_channels, drop_path=0.,layer_scale_init_value=1e-6, gnconv=gnconv,order=3)
-        self.gnblock_dark3 = Block(dim=base_channels * 2, drop_path=0.,layer_scale_init_value=1e-6, gnconv=gnconv,order=2)
-        self.gnblock_dark4 = Block(dim=base_channels * 4, drop_path=0.,layer_scale_init_value=1e-6, gnconv=gnconv,order=2)
+        self.gnconv=gnconv
+        self.gnblock_dark2 = Block(dim=base_channels * 2, drop_path=0.,layer_scale_init_value=1e-6, gnconv=gnconv,order=2)
+        self.gnblock_dark3 = Block(dim=base_channels * 4, drop_path=0.,layer_scale_init_value=1e-6, gnconv=gnconv,order=2)
+        self.gnblock_dark4 = Block(dim=base_channels * 8, drop_path=0.,layer_scale_init_value=1e-6, gnconv=gnconv,order=3)
+        self.gnblock_dark5 = Block(dim=base_channels * 16, drop_path=0.,layer_scale_init_value=1e-6, gnconv=gnconv,order=2)
 
         # stem
         self.stem = Focus(3, base_channels, ksize=3, act=act)
 
         # dark2
         self.dark2 = nn.Sequential(
-            self.gnblock_dark2,
             Conv(base_channels, base_channels * 2, 3, 2, act=act),
-            CSPLayer(
-                base_channels * 2,
-                base_channels * 2,
-                n=base_depth,
-                depthwise=depthwise,
-                act=act,
-            ),
+            self.gnblock_dark2,
+            # CSPLayer(
+            #     base_channels * 2,
+            #     base_channels * 2,
+            #     n=base_depth,
+            #     depthwise=depthwise,
+            #     act=act,
+            # ),
         )
 
         # dark3
         self.dark3 = nn.Sequential(
-            self.gnblock_dark3,
             Conv(base_channels * 2, base_channels * 4, 3, 2, act=act),
-            CSPLayer(
-                base_channels * 4,
-                base_channels * 4,
-                n=base_depth * 3,
-                depthwise=depthwise,
-                act=act,
-            ),
+            self.gnblock_dark3,
+            # CSPLayer(
+            #     base_channels * 4,
+            #     base_channels * 4,
+            #     n=base_depth * 3,
+            #     depthwise=depthwise,
+            #     act=act,
+            # ),
         )
 
         # dark4
         self.dark4 = nn.Sequential(
-            self.gnblock_dark4,
             Conv(base_channels * 4, base_channels * 8, 3, 2, act=act),
-            CSPLayer(
-                base_channels * 8,
-                base_channels * 8,
-                n=base_depth * 3,
-                depthwise=depthwise,
-                act=act,
-            ),
+            self.gnblock_dark4,
+            # CSPLayer(
+            #     base_channels * 8,
+            #     base_channels * 8,
+            #     n=base_depth * 3,
+            #     depthwise=depthwise,
+            #     act=act,
+            # ),
         )
 
         # dark5
         self.dark5 = nn.Sequential(
             Conv(base_channels * 8, base_channels * 16, 3, 2, act=act),
             SPPBottleneck(base_channels * 16, base_channels * 16, activation=act),
-            CSPLayer(
-                base_channels * 16,
-                base_channels * 16,
-                n=base_depth,
-                shortcut=False,
-                depthwise=depthwise,
-                act=act,
-            ),
+            self.gnblock_dark5,
+            # CSPLayer(
+            #     base_channels * 16,
+            #     base_channels * 16,
+            #     n=base_depth,
+            #     shortcut=False,
+            #     depthwise=depthwise,
+            #     act=act,
+            # ),
         )
 
     def forward(self, x):
