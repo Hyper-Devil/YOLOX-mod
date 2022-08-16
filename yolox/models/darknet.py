@@ -5,6 +5,7 @@
 from torch import nn
 
 from .network_blocks import BaseConv, CSPLayer, DWConv, Focus, ResLayer, SPPBottleneck
+from .hornet import Block, gnconv, LayerNorm
 
 
 class Darknet(nn.Module):
@@ -110,12 +111,19 @@ class CSPDarknet(nn.Module):
 
         base_channels = int(wid_mul * 64)  # 64
         base_depth = max(round(dep_mul * 3), 1)  # 3
+        
+        # hornet
+        self.gnconv = gnconv
+        self.gnblock_dark2 = Block(dim=base_channels, drop_path=0.,layer_scale_init_value=1e-6, gnconv=gnconv,order=3)
+        self.gnblock_dark3 = Block(dim=base_channels * 2, drop_path=0.,layer_scale_init_value=1e-6, gnconv=gnconv,order=2)
+        self.gnblock_dark4 = Block(dim=base_channels * 4, drop_path=0.,layer_scale_init_value=1e-6, gnconv=gnconv,order=2)
 
         # stem
         self.stem = Focus(3, base_channels, ksize=3, act=act)
 
         # dark2
         self.dark2 = nn.Sequential(
+            self.gnblock_dark2,
             Conv(base_channels, base_channels * 2, 3, 2, act=act),
             CSPLayer(
                 base_channels * 2,
@@ -128,6 +136,7 @@ class CSPDarknet(nn.Module):
 
         # dark3
         self.dark3 = nn.Sequential(
+            self.gnblock_dark3,
             Conv(base_channels * 2, base_channels * 4, 3, 2, act=act),
             CSPLayer(
                 base_channels * 4,
@@ -140,6 +149,7 @@ class CSPDarknet(nn.Module):
 
         # dark4
         self.dark4 = nn.Sequential(
+            self.gnblock_dark4,
             Conv(base_channels * 4, base_channels * 8, 3, 2, act=act),
             CSPLayer(
                 base_channels * 8,

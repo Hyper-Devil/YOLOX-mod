@@ -74,7 +74,7 @@ class SA(nn.Module):
         k_size: Adaptive selection of kernel size
     """
 
-    def __init__(self, channel, groups=8):
+    def __init__(self, channel, groups=16):
         super(SA, self).__init__()
         self.groups = groups
         self.avg_pool = nn.AdaptiveAvgPool2d(1)
