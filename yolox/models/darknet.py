@@ -6,7 +6,7 @@ from torch import nn
 
 from .network_blocks import MPConv, Bconv, E_ELAN, BaseConv, CSPLayer, DWConv, Focus, ResLayer, SPPBottleneck
 from .hornet import Block, gnconv, LayerNorm
-
+from .attention import SA
 
 class Darknet(nn.Module):
     # number of blocks from dark2 to dark5.
@@ -47,15 +47,17 @@ class Darknet(nn.Module):
             *self.make_group_layer(in_channels, num_blocks[1], stride=2)
         )
         in_channels *= 2  # 256
+        self.SA_3 = SA(in_channels) #SA注意力
         self.dark4 = nn.Sequential(
             *self.make_group_layer(in_channels, num_blocks[2], stride=2)
         )
         in_channels *= 2  # 512
-
+        self.SA_4 = SA(in_channels) #SA注意力
         self.dark5 = nn.Sequential(
             *self.make_group_layer(in_channels, num_blocks[3], stride=2),
             *self.make_spp_block([in_channels, in_channels * 2], in_channels * 2),
         )
+        self.SA_5 = SA(in_channels * 2) #SA注意力 
 
     def make_group_layer(self, in_channels: int, num_blocks: int, stride: int = 1):
         "starts with conv layer then has `num_blocks` `ResLayer`"
@@ -86,11 +88,11 @@ class Darknet(nn.Module):
         outputs["stem"] = x
         x = self.dark2(x)
         outputs["dark2"] = x
-        x = self.dark3(x)
+        x = self.SA_3(self.dark3(x))
         outputs["dark3"] = x
-        x = self.dark4(x)
+        x = self.SA_4(self.dark4(x))
         outputs["dark4"] = x
-        x = self.dark5(x)
+        x = self.SA_5(self.dark5(x))
         outputs["dark5"] = x
         return {k: v for k, v in outputs.items() if k in self.out_features}
 
@@ -113,11 +115,11 @@ class CSPDarknet(nn.Module):
         base_depth = max(round(dep_mul * 3), 1)  # 3
         
         # hornet
-        self.gnconv=gnconv
-        self.gnblock_dark2 = Block(dim=base_channels * 2, drop_path=0.,layer_scale_init_value=1e-6, gnconv=gnconv,order=2)
-        self.gnblock_dark3 = Block(dim=base_channels * 4, drop_path=0.,layer_scale_init_value=1e-6, gnconv=gnconv,order=2)
-        self.gnblock_dark4 = Block(dim=base_channels * 8, drop_path=0.,layer_scale_init_value=1e-6, gnconv=gnconv,order=3)
-        self.gnblock_dark5 = Block(dim=base_channels * 16, drop_path=0.,layer_scale_init_value=1e-6, gnconv=gnconv,order=2)
+        # self.gnconv=gnconv
+        # self.gnblock_dark2 = Block(dim=base_channels * 2, drop_path=0.,layer_scale_init_value=1e-6, gnconv=gnconv,order=2)
+        # self.gnblock_dark3 = Block(dim=base_channels * 4, drop_path=0.,layer_scale_init_value=1e-6, gnconv=gnconv,order=2)
+        # self.gnblock_dark4 = Block(dim=base_channels * 8, drop_path=0.,layer_scale_init_value=1e-6, gnconv=gnconv,order=3)
+        # self.gnblock_dark5 = Block(dim=base_channels * 16, drop_path=0.,layer_scale_init_value=1e-6, gnconv=gnconv,order=2)
 
         # stem
         self.stem = Focus(3, base_channels, ksize=3, act=act)
@@ -125,55 +127,55 @@ class CSPDarknet(nn.Module):
         # dark2
         self.dark2 = nn.Sequential(
             Conv(base_channels, base_channels * 2, 3, 2, act=act),
-            self.gnblock_dark2,
-            # CSPLayer(
-            #     base_channels * 2,
-            #     base_channels * 2,
-            #     n=base_depth,
-            #     depthwise=depthwise,
-            #     act=act,
-            # ),
+            # self.gnblock_dark2,
+            CSPLayer(
+                base_channels * 2,
+                base_channels * 2,
+                n=base_depth,
+                depthwise=depthwise,
+                act=act,
+            ),
         )
 
         # dark3
         self.dark3 = nn.Sequential(
             Conv(base_channels * 2, base_channels * 4, 3, 2, act=act),
-            self.gnblock_dark3,
-            # CSPLayer(
-            #     base_channels * 4,
-            #     base_channels * 4,
-            #     n=base_depth * 3,
-            #     depthwise=depthwise,
-            #     act=act,
-            # ),
+            # self.gnblock_dark3,
+            CSPLayer(
+                base_channels * 4,
+                base_channels * 4,
+                n=base_depth * 3,
+                depthwise=depthwise,
+                act=act,
+            ),
         )
 
         # dark4
         self.dark4 = nn.Sequential(
             Conv(base_channels * 4, base_channels * 8, 3, 2, act=act),
-            self.gnblock_dark4,
-            # CSPLayer(
-            #     base_channels * 8,
-            #     base_channels * 8,
-            #     n=base_depth * 3,
-            #     depthwise=depthwise,
-            #     act=act,
-            # ),
+            # self.gnblock_dark4,
+            CSPLayer(
+                base_channels * 8,
+                base_channels * 8,
+                n=base_depth * 3,
+                depthwise=depthwise,
+                act=act,
+            ),
         )
 
         # dark5
         self.dark5 = nn.Sequential(
             Conv(base_channels * 8, base_channels * 16, 3, 2, act=act),
             SPPBottleneck(base_channels * 16, base_channels * 16, activation=act),
-            self.gnblock_dark5,
-            # CSPLayer(
-            #     base_channels * 16,
-            #     base_channels * 16,
-            #     n=base_depth,
-            #     shortcut=False,
-            #     depthwise=depthwise,
-            #     act=act,
-            # ),
+            # self.gnblock_dark5,
+            CSPLayer(
+                base_channels * 16,
+                base_channels * 16,
+                n=base_depth,
+                shortcut=False,
+                depthwise=depthwise,
+                act=act,
+            ),
         )
 
     def forward(self, x):

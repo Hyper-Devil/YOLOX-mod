@@ -82,8 +82,8 @@ class YOLOPAFPN(nn.Module):
         # 如果在yolox-s 640 下，012对应 128 256 512
         # in_channels=[256, 512, 1024]
         self.SA_0 = SA(int(in_channels[0] * width))
-        self.SA_1 = SA(int(in_channels[1] * width))
-        self.SA_2 = SA(int(in_channels[2] * width))
+        # self.SA_1 = SA(int(in_channels[1] * width))
+        # self.SA_2 = SA(int(in_channels[2] * width))
         # self.GAM_0 = GAM_Attention(int(in_channels[0] * width), int(in_channels[0] * width), rate=16) 
         # self.GAM_1 = GAM_Attention(int(in_channels[1] * width), int(in_channels[1] * width), rate=32)  
         # self.GAM_2 = GAM_Attention(int(in_channels[2] * width), int(in_channels[2] * width), rate=64)  
@@ -102,9 +102,9 @@ class YOLOPAFPN(nn.Module):
         features = [out_features[f] for f in self.in_features]
         [x2, x1, x0] = features
 
-        x2=self.SA_0(x2)
-        x1=self.SA_1(x1)
-        x0=self.SA_2(x0)
+        # x2=self.SA_0(x2)
+        # x1=self.SA_1(x1)
+        # x0=self.SA_2(x0)
 
         # 0814注：这里1024->512/32是width=1.0
         # 这里的32 16 表示特征图尺寸  例如640/32=20x20
@@ -117,6 +117,7 @@ class YOLOPAFPN(nn.Module):
         f_out1 = self.upsample(fpn_out1)  # 256/8
         f_out1 = torch.cat([f_out1, x2], 1)  # 256->512/8
         pan_out2 = self.C3_p3(f_out1)  # 512->256/8      
+        pan_out2 = self.SA_0(pan_out2)
 
         p_out1 = self.bu_conv2(pan_out2)  # 256->256/16
         p_out1 = torch.cat([p_out1, fpn_out1], 1)  # 256->512/16
