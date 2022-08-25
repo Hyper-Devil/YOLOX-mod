@@ -47,17 +47,15 @@ class Darknet(nn.Module):
             *self.make_group_layer(in_channels, num_blocks[1], stride=2)
         )
         in_channels *= 2  # 256
-        self.SA_3 = SA(in_channels) #SA注意力
         self.dark4 = nn.Sequential(
             *self.make_group_layer(in_channels, num_blocks[2], stride=2)
         )
         in_channels *= 2  # 512
-        self.SA_4 = SA(in_channels) #SA注意力
         self.dark5 = nn.Sequential(
             *self.make_group_layer(in_channels, num_blocks[3], stride=2),
             *self.make_spp_block([in_channels, in_channels * 2], in_channels * 2),
         )
-        self.SA_5 = SA(in_channels * 2) #SA注意力 
+        self.ECA = ECAAttention(kernel_size=3)
 
     def make_group_layer(self, in_channels: int, num_blocks: int, stride: int = 1):
         "starts with conv layer then has `num_blocks` `ResLayer`"
@@ -88,11 +86,11 @@ class Darknet(nn.Module):
         outputs["stem"] = x
         x = self.dark2(x)
         outputs["dark2"] = x
-        x = self.SA_3(self.dark3(x))
+        x = self.ECA(self.dark3(x))
         outputs["dark3"] = x
-        x = self.SA_4(self.dark4(x))
+        x = self.ECA(self.dark4(x))
         outputs["dark4"] = x
-        x = self.SA_5(self.dark5(x))
+        x = self.ECA(self.dark5(x))
         outputs["dark5"] = x
         return {k: v for k, v in outputs.items() if k in self.out_features}
 
