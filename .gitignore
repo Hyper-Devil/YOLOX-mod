@@ -5,6 +5,7 @@
 YOLOX_outputs/
 datasets/
 wandb/
+artifacts/
 # do not ignore datasets under yolox/data
 !*yolox/data/datasets/
 

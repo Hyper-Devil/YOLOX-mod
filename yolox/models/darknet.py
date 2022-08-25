@@ -6,7 +6,7 @@ from torch import nn
 
 from .network_blocks import MPConv, Bconv, E_ELAN, BaseConv, CSPLayer, DWConv, Focus, ResLayer, SPPBottleneck
 from .hornet import Block, gnconv, LayerNorm
-from .attention import SA
+from .attention import SA,ECAAttention
 
 class Darknet(nn.Module):
     # number of blocks from dark2 to dark5.

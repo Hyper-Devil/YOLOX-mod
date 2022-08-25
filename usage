@@ -21,3 +21,15 @@ tensorboard --logdir=./YOLOX_outputs
 
 docker commit 4f43 whd:0814
 docker run -it -p 2582:22 --gpus='"device=0,1,2,3"' --shm-size 64g --ipc=host --name whd_device_all -v /tmp/.X11-unix/:/tmp/.X11-unix/ -e DISPLAY=$DISPLAY -v /home/mct/whd:/root/ -v /mnt/sdb1/whd/:/root/data whd:0814 /bin/bash
+
+coco数据集：
+docker run -it -p 2583:22 -p 6562:6006 --gpus='"device=0"' --shm-size 64g --ipc=host --name yolox_gpu0 -v /tmp/.X11-unix/:/tmp/.X11-unix/ -e DISPLAY=$DISPLAY -v /home/sy/whd/YOLOX-mod:/YOLOX -v /home/sy/whd/cone_coco:/YOLOX/datasets/coco cnstark/pytorch:1.8.1-py3.9.12-cuda11.1-devel-ubuntu20.04 /bin/bash
+cd ~/YOLOX
+python -m yolox.tools.train -f exps/example/custom/nano.py -d 1 -b 32 --fp16 --cache -o --logger wandb
+docker run -it -p 2584:22 -p 6563:6006 --gpus='"device=1"' --shm-size 64g --ipc=host --name yolox_gpu1 -v /tmp/.X11-unix/:/tmp/.X11-unix/ -e DISPLAY=$DISPLAY -v /home/sy/whd/YOLOX-mod:/YOLOX -v /home/sy/whd/cone_coco:/YOLOX/datasets/coco cnstark/pytorch:1.8.1-py3.9.12-cuda11.1-devel-ubuntu20.04 /bin/bash
+python -m yolox.tools.train -f exps/example/custom/bit.py -d 1 -b 32 --fp16 --cache -o --logger wandb
+pip install protobuf
+sudo apt-get install protobuf-compiler libprotoc-dev libgl1-mesa-glx libglib2.0-dev
+pip install onnx
+
+
