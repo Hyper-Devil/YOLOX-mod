@@ -47,17 +47,17 @@ class Darknet(nn.Module):
             *self.make_group_layer(in_channels, num_blocks[1], stride=2)
         )
         in_channels *= 2  # 256
-        self.SA_3 = SA(in_channels) #SA注意力
+        # self.SA_3 = SA(in_channels) #SA注意力
         self.dark4 = nn.Sequential(
             *self.make_group_layer(in_channels, num_blocks[2], stride=2)
         )
         in_channels *= 2  # 512
-        self.SA_4 = SA(in_channels) #SA注意力
+        # self.SA_4 = SA(in_channels) #SA注意力
         self.dark5 = nn.Sequential(
             *self.make_group_layer(in_channels, num_blocks[3], stride=2),
             *self.make_spp_block([in_channels, in_channels * 2], in_channels * 2),
         )
-        self.SA_5 = SA(in_channels * 2) #SA注意力 
+        # self.SA_5 = SA(in_channels * 2) #SA注意力 
 
     def make_group_layer(self, in_channels: int, num_blocks: int, stride: int = 1):
         "starts with conv layer then has `num_blocks` `ResLayer`"
