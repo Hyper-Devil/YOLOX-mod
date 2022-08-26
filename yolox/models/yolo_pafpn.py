@@ -7,7 +7,7 @@ import torch.nn as nn
 from torch.nn.parameter import Parameter
 from .darknet import CSPDarknet
 from .network_blocks import BaseConv, CSPLayer, DWConv
-from .attention import SA
+from .attention import SA, ECAAttention
 
 class YOLOPAFPN(nn.Module):
     """
@@ -81,6 +81,7 @@ class YOLOPAFPN(nn.Module):
         )
         # 如果在yolox-s 640 下，012对应 128 256 512
         # in_channels=[256, 512, 1024]
+        self.ECA = ECAAttention(kernel_size=3)
         # self.SA_0 = SA(int(in_channels[0] * width))
         # self.SA_1 = SA(int(in_channels[1] * width))
         # self.SA_2 = SA(int(in_channels[2] * width))
@@ -125,6 +126,10 @@ class YOLOPAFPN(nn.Module):
         p_out0 = self.bu_conv1(pan_out1)  # 512->512/32
         p_out0 = torch.cat([p_out0, fpn_out0], 1)  # 512->1024/32
         pan_out0 = self.C3_n4(p_out0)  # 1024->1024/32
+
+        pan_out2 = self.ECA(pan_out2)
+        pan_out1 = self.ECA(pan_out1)
+        pan_out0 = self.ECA(pan_out0)
 
         outputs = (pan_out2, pan_out1, pan_out0)
         return outputs
