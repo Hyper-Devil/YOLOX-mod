@@ -55,8 +55,7 @@ class Darknet(nn.Module):
             *self.make_group_layer(in_channels, num_blocks[3], stride=2),
             *self.make_spp_block([in_channels, in_channels * 2], in_channels * 2),
         )
-        self.ECA = ECAAttention(kernel_size=3)
-
+        
     def make_group_layer(self, in_channels: int, num_blocks: int, stride: int = 1):
         "starts with conv layer then has `num_blocks` `ResLayer`"
         return [
@@ -146,6 +145,7 @@ class CSPDarknet(nn.Module):
                 depthwise=depthwise,
                 act=act,
             ),
+            ECAAttention(kernel_size=3),
         )
 
         # dark4
@@ -159,6 +159,7 @@ class CSPDarknet(nn.Module):
                 depthwise=depthwise,
                 act=act,
             ),
+            ECAAttention(kernel_size=3),
         )
 
         # dark5
@@ -174,6 +175,7 @@ class CSPDarknet(nn.Module):
                 depthwise=depthwise,
                 act=act,
             ),
+            ECAAttention(kernel_size=3),
         )
 
     def forward(self, x):
