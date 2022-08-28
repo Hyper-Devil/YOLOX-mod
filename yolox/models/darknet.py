@@ -4,7 +4,7 @@
 
 from torch import nn
 
-from .network_blocks import MPConv, Bconv, E_ELAN, BaseConv, CSPLayer, DWConv, Focus, ResLayer, SPPBottleneck
+from .network_blocks import MPConv, Bconv, E_ELAN, BaseConv, CSPLayer, DWConv, Focus, ResLayer, SPPBottleneck, ST2CSPA
 from .hornet import Block, gnconv, LayerNorm
 from .attention import SA,ECAAttention
 
@@ -145,7 +145,7 @@ class CSPDarknet(nn.Module):
                 depthwise=depthwise,
                 act=act,
             ),
-            # ECAAttention(kernel_size=3),
+            ECAAttention(kernel_size=3),
         )
 
         # dark4
@@ -159,7 +159,7 @@ class CSPDarknet(nn.Module):
                 depthwise=depthwise,
                 act=act,
             ),
-            # ECAAttention(kernel_size=3),
+            ECAAttention(kernel_size=3),
         )
 
         # dark5
@@ -167,15 +167,16 @@ class CSPDarknet(nn.Module):
             Conv(base_channels * 8, base_channels * 16, 3, 2, act=act),
             SPPBottleneck(base_channels * 16, base_channels * 16, activation=act),
             # self.gnblock_dark5,
-            CSPLayer(
-                base_channels * 16,
-                base_channels * 16,
-                n=base_depth,
-                shortcut=False,
-                depthwise=depthwise,
-                act=act,
-            ),
-            # ECAAttention(kernel_size=3),
+            # CSPLayer(
+            #     base_channels * 16,
+            #     base_channels * 16,
+            #     n=base_depth,
+            #     shortcut=False,
+            #     depthwise=depthwise,
+            #     act=act,
+            # ),
+            ST2CSPA(base_channels * 16, base_channels * 16),
+            ECAAttention(kernel_size=3),
         )
 
     def forward(self, x):

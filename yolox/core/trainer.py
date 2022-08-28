@@ -165,8 +165,8 @@ class Trainer:
 
         # 加入GAM后报错,原因是init有没用到的定义
         if self.is_distributed:
-            model = DDP(model, device_ids=[self.local_rank], broadcast_buffers=False)
-            # model = DDP(model, device_ids=[self.local_rank], broadcast_buffers=False, find_unused_parameters=True)
+            # model = DDP(model, device_ids=[self.local_rank], broadcast_buffers=False)
+            model = DDP(model, device_ids=[self.local_rank], broadcast_buffers=False, find_unused_parameters=True)
 
         if self.use_model_ema:
             self.ema_model = ModelEMA(model, 0.9998)

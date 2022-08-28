@@ -6,7 +6,7 @@ import torch
 import torch.nn as nn
 from torch.nn.parameter import Parameter
 from .darknet import CSPDarknet
-from .network_blocks import BaseConv, CSPLayer, DWConv
+from .network_blocks import BaseConv, CSPLayer, DWConv, ST2CSPA
 from .attention import SA, ECAAttention
 
 class YOLOPAFPN(nn.Module):
@@ -53,6 +53,7 @@ class YOLOPAFPN(nn.Module):
             depthwise=depthwise,
             act=act,
         )
+        self.C3_p3_STA = ST2CSPA(int(2 * in_channels[0] * width), int(in_channels[0] * width))
 
         # bottom-up conv
         self.bu_conv2 = Conv(
@@ -66,6 +67,7 @@ class YOLOPAFPN(nn.Module):
             depthwise=depthwise,
             act=act,
         )
+        self.C3_n3_STA = ST2CSPA(int(2 * in_channels[0] * width), int(in_channels[1] * width))
 
         # bottom-up conv
         self.bu_conv1 = Conv(
@@ -79,16 +81,17 @@ class YOLOPAFPN(nn.Module):
             depthwise=depthwise,
             act=act,
         )
+        self.C3_n4_STA = ST2CSPA(int(2 * in_channels[1] * width), int(in_channels[2] * width))
+
         # 如果在yolox-s 640 下，012对应 128 256 512
         # in_channels=[256, 512, 1024]
-        self.ECA = ECAAttention(kernel_size=3)
+        # self.ECA = ECAAttention(kernel_size=3)
         # self.SA_0 = SA(int(in_channels[0] * width))
         # self.SA_1 = SA(int(in_channels[1] * width))
         # self.SA_2 = SA(int(in_channels[2] * width))
         # self.GAM_0 = GAM_Attention(int(in_channels[0] * width), int(in_channels[0] * width), rate=16) 
         # self.GAM_1 = GAM_Attention(int(in_channels[1] * width), int(in_channels[1] * width), rate=32)  
         # self.GAM_2 = GAM_Attention(int(in_channels[2] * width), int(in_channels[2] * width), rate=64)  
-        
     def forward(self, input):
         """
         Args:
@@ -108,24 +111,23 @@ class YOLOPAFPN(nn.Module):
         fpn_out0 = self.lateral_conv0(x0)  # 1024->512/32
         f_out0 = self.upsample(fpn_out0)  # 512/16
         f_out0 = torch.cat([f_out0, x1], 1)  # 512->1024/16
-        f_out0 = self.ECA(f_out0)
         f_out0 = self.C3_p4(f_out0)  # 1024->512/16
 
         fpn_out1 = self.reduce_conv1(f_out0)  # 512->256/16
         f_out1 = self.upsample(fpn_out1)  # 256/8
         f_out1 = torch.cat([f_out1, x2], 1)  # 256->512/8
-        f_out1 = self.ECA(f_out1)
-        pan_out2 = self.C3_p3(f_out1)  # 512->256/8      
+        # pan_out2 = self.C3_p3(f_out1)  # 512->256/8      
+        pan_out2 = self.C3_p3_STA(f_out1)
 
         p_out1 = self.bu_conv2(pan_out2)  # 256->256/16
         p_out1 = torch.cat([p_out1, fpn_out1], 1)  # 256->512/16
-        p_out1 = self.ECA(p_out1)
-        pan_out1 = self.C3_n3(p_out1)  # 512->512/16
+        # pan_out1 = self.C3_n3(p_out1)  # 512->512/16
+        pan_out1 = self.C3_n3_STA(p_out1)
 
         p_out0 = self.bu_conv1(pan_out1)  # 512->512/32
         p_out0 = torch.cat([p_out0, fpn_out0], 1)  # 512->1024/32
-        p_out0 = self.ECA(p_out0)
-        pan_out0 = self.C3_n4(p_out0)  # 1024->1024/32
+        # pan_out0 = self.C3_n4(p_out0)  # 1024->1024/
+        pan_out0 = self.C3_n4_STA(p_out0)
 
         outputs = (pan_out2, pan_out1, pan_out0)
         return outputs
