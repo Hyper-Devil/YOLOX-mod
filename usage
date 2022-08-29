@@ -36,3 +36,5 @@ pip install onnx
 docker run -it -p 25863:22 -p 6562:6006 --gpus='"device=0,1"' --shm-size 64g --ipc=host --name yolox_gpuall -v /tmp/.X11-unix/:/tmp/.X11-unix/ -e DISPLAY=$DISPLAY -v /home/sy/whd/YOLOX-mod:/YOLOX -v /home/sy/whd/cone_coco:/YOLOX/datasets/coco yolox:0828 /bin/bash
 
 
+
+
