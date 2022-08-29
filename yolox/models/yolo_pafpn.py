@@ -8,6 +8,7 @@ from torch.nn.parameter import Parameter
 from .darknet import CSPDarknet
 from .network_blocks import BaseConv, CSPLayer, DWConv
 from .attention import SA, ECAAttention
+from .swintransformer import C3STR
 
 class YOLOPAFPN(nn.Module):
     """
@@ -54,7 +55,8 @@ class YOLOPAFPN(nn.Module):
             act=act,
         )
         # self.C3_p3_STA = SwinTransformer2Block(int(2 * in_channels[0] * width), int(in_channels[0] * width), int(in_channels[0] * width // 16), 1)
-
+        self.C3_p3_STR = C3STR(int(2 * in_channels[0] * width), int(in_channels[0] * width))
+        
         # bottom-up conv
         self.bu_conv2 = Conv(
             int(in_channels[0] * width), int(in_channels[0] * width), 3, 2, act=act
@@ -116,8 +118,9 @@ class YOLOPAFPN(nn.Module):
         fpn_out1 = self.reduce_conv1(f_out0)  # 512->256/16
         f_out1 = self.upsample(fpn_out1)  # 256/8
         f_out1 = torch.cat([f_out1, x2], 1)  # 256->512/8
-        pan_out2 = self.C3_p3(f_out1)  # 512->256/8      
+        # pan_out2 = self.C3_p3(f_out1)  # 512->256/8      
         # pan_out2 = self.C3_p3_STA(f_out1)
+        pan_out2 = self.C3_p3_STR(f_out1)
 
         p_out1 = self.bu_conv2(pan_out2)  # 256->256/16
         p_out1 = torch.cat([p_out1, fpn_out1], 1)  # 256->512/16

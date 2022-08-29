@@ -178,7 +178,7 @@ class CSPDarknet(nn.Module):
             ),
             # SwinTransformer2Block(base_channels * 16, base_channels * 16, base_channels, 1),
             C3STR(base_channels * 16, base_channels * 16),
-            # ECAAttention(kernel_size=3),
+            ECAAttention(kernel_size=3),
         )
 
     def forward(self, x):
