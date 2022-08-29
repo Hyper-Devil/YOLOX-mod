@@ -54,7 +54,6 @@ class YOLOPAFPN(nn.Module):
             depthwise=depthwise,
             act=act,
         )
-        # self.C3_p3_STA = SwinTransformer2Block(int(2 * in_channels[0] * width), int(in_channels[0] * width), int(in_channels[0] * width // 16), 1)
         self.C3_p3_STR = C3STR(int(2 * in_channels[0] * width), int(in_channels[0] * width))
         
         # bottom-up conv
@@ -69,7 +68,7 @@ class YOLOPAFPN(nn.Module):
             depthwise=depthwise,
             act=act,
         )
-        # self.C3_n3_STA = SwinTransformer2Block(int(2 * in_channels[0] * width), int(in_channels[1] * width), int(in_channels[1] * width // 16), 1)
+        # self.C3_n3_STR = C3STR(int(2 * in_channels[0] * width), int(in_channels[1] * width), int(in_channels[1] * width // 16), 1)
 
         # bottom-up conv
         self.bu_conv1 = Conv(
@@ -83,17 +82,11 @@ class YOLOPAFPN(nn.Module):
             depthwise=depthwise,
             act=act,
         )
-        # self.C3_n4_STA = SwinTransformer2Block(int(2 * in_channels[1] * width), int(in_channels[2] * width), int(in_channels[2] * width // 16), 1)
+        # self.C3_n4_STR = C3STR(int(2 * in_channels[1] * width), int(in_channels[2] * width), int(in_channels[2] * width // 16), 1)
 
         # 如果在yolox-s 640 下，012对应 128 256 512
         # in_channels=[256, 512, 1024]
         # self.ECA = ECAAttention(kernel_size=3)
-        # self.SA_0 = SA(int(in_channels[0] * width))
-        # self.SA_1 = SA(int(in_channels[1] * width))
-        # self.SA_2 = SA(int(in_channels[2] * width))
-        # self.GAM_0 = GAM_Attention(int(in_channels[0] * width), int(in_channels[0] * width), rate=16) 
-        # self.GAM_1 = GAM_Attention(int(in_channels[1] * width), int(in_channels[1] * width), rate=32)  
-        # self.GAM_2 = GAM_Attention(int(in_channels[2] * width), int(in_channels[2] * width), rate=64)  
     def forward(self, input):
         """
         Args:

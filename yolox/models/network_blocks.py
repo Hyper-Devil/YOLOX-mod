@@ -78,26 +78,6 @@ class DWConv(nn.Module):
         x = self.dconv(x)
         return self.pconv(x)
 
-class Bconv(nn.Module):
-    def __init__(self,ch_in,ch_out,k,s):
-        '''
-        :param ch_in: 输入通道数
-        :param ch_out: 输出通道数
-        :param k: 卷积核尺寸
-        :param s: 步长
-        :return:
-        '''
-        super(Bconv, self).__init__()
-        self.conv=nn.Conv2d(ch_in,ch_out,k,s,padding=k//2)
-        self.bn=nn.BatchNorm2d(ch_out)
-        self.act=nn.SiLU()
-    def forward(self,x):
-        '''
-        :param x: 输入
-        :return:
-        '''
-        return self.act(self.bn(self.conv(x)))
-
 class MPConv(nn.Module):
     def __init__(self,ch_in,ch_out):
         '''
@@ -105,15 +85,16 @@ class MPConv(nn.Module):
         :param ch_out: 这里给的是中间层的输出通道
         '''
         super(MPConv, self).__init__()
+        ch_out_ = int(ch_out * 0.5)
         #分支一
         self.conv1=nn.Sequential(
             nn.MaxPool2d(2,2),
-            Bconv(ch_in,ch_out,1,1),
+            BaseConv(ch_in,ch_out_,1,1),
         )
         #分支二
         self.conv2=nn.Sequential(
-            Bconv(ch_in,ch_out,1,1),
-            Bconv(ch_out,ch_out,3,2),
+            BaseConv(ch_in,ch_out_,1,1),
+            BaseConv(ch_out_,ch_out_,3,2),
         )
 
     def forward(self,x):
@@ -125,7 +106,7 @@ class MPConv(nn.Module):
         return torch.cat((output1,output2),dim=1)
 
 class E_ELAN(nn.Module):
-    def __init__(self,ch_in,ch_out,flg=False):
+    def __init__(self,ch_in,ch_out,depthwise=False, flg=False):
         '''
         :param ch_in: 输入通道
         :param ch_out: 这里给的是中间层的输出通道
@@ -133,15 +114,18 @@ class E_ELAN(nn.Module):
         '''
         super(E_ELAN, self).__init__()
         # 卷积类型一
-        self.conv1=Bconv(ch_in,ch_out,k=1,s=1)
+        self.conv1=BaseConv(ch_in,ch_out,1,1)
         # 卷积类型二
-        self.conv2=Bconv(ch_out,ch_out,k=3,s=1)
+        if depthwise:
+            self.conv2=DWConv(ch_out,ch_out,3,1)
+        else:
+            self.conv2=BaseConv(ch_out,ch_out,3,1)
 
         #cat之后的卷积
         if flg:
-            self.conv3=Bconv(2*ch_in,ch_in,k=1,s=1)
+            self.conv3=BaseConv(2*ch_in,ch_in,1,1)
         else:
-            self.conv3=Bconv(2*ch_in,2*ch_in,k=1,s=1)
+            self.conv3=BaseConv(2*ch_in,2*ch_in,1,1)
 
     def forward(self,x):
         '''

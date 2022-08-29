@@ -168,16 +168,15 @@ class CSPDarknet(nn.Module):
             Conv(base_channels * 8, base_channels * 16, 3, 2, act=act),
             SPPBottleneck(base_channels * 16, base_channels * 16, activation=act),
             # self.gnblock_dark5,
-            CSPLayer(
-                base_channels * 16,
-                base_channels * 16,
-                n=base_depth,
-                shortcut=False,
-                depthwise=depthwise,
-                act=act,
-            ),
-            # SwinTransformer2Block(base_channels * 16, base_channels * 16, base_channels, 1),
-            C3STR(base_channels * 16, base_channels * 16),
+            # CSPLayer(
+            #     base_channels * 16,
+            #     base_channels * 16,
+            #     n=base_depth,
+            #     shortcut=False,
+            #     depthwise=depthwise,
+            #     act=act,
+            # ),
+            C3STR(base_channels * 16, base_channels * 16, 2),
             ECAAttention(kernel_size=3),
         )
 
