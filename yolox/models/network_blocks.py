@@ -81,20 +81,22 @@ class DWConv(nn.Module):
 class MPConv(nn.Module):
     def __init__(self,ch_in,ch_out):
         '''
-        :param ch_in: 输如通道
-        :param ch_out: 这里给的是中间层的输出通道
+        :param ch_in: 输入通道
+        :param ch_out: 输出通道
         '''
         super(MPConv, self).__init__()
-        ch_out_ = int(ch_out * 0.5)
+
+        assert ch_in * 2 == ch_out
+
         #分支一
         self.conv1=nn.Sequential(
             nn.MaxPool2d(2,2),
-            BaseConv(ch_in,ch_out_,1,1),
+            DWConv(ch_in,ch_in,1,1),
         )
         #分支二
         self.conv2=nn.Sequential(
-            BaseConv(ch_in,ch_out_,1,1),
-            BaseConv(ch_out_,ch_out_,3,2),
+            DWConv(ch_in,ch_in,1,1),
+            DWConv(ch_in,ch_in,3,2),
         )
 
     def forward(self,x):
@@ -106,26 +108,25 @@ class MPConv(nn.Module):
         return torch.cat((output1,output2),dim=1)
 
 class E_ELAN(nn.Module):
-    def __init__(self,ch_in,ch_out,depthwise=False, flg=False):
+    def __init__(self,ch_in,ch_out,depthwise=False):
         '''
         :param ch_in: 输入通道
-        :param ch_out: 这里给的是中间层的输出通道
-        :param flg: 判断是否为backbone的最后一层，因为这里的输出通道数有所改变
+        :param ch_out: 输出通道
         '''
         super(E_ELAN, self).__init__()
+        ch_out_ = int(ch_in * 0.5)
+        assert ch_out_ * 2 == ch_out
         # 卷积类型一
-        self.conv1=BaseConv(ch_in,ch_out,1,1)
+        self.conv1=BaseConv(ch_in,ch_out_,1,1)
         # 卷积类型二
         if depthwise:
-            self.conv2=DWConv(ch_out,ch_out,3,1)
+            self.conv2=DWConv(ch_out_,ch_out_,3,1)
         else:
-            self.conv2=BaseConv(ch_out,ch_out,3,1)
+            self.conv2=BaseConv(ch_out_,ch_out_,3,1)
 
         #cat之后的卷积
-        if flg:
-            self.conv3=BaseConv(2*ch_in,ch_in,1,1)
-        else:
-            self.conv3=BaseConv(2*ch_in,2*ch_in,1,1)
+        self.conv3=BaseConv(4 * ch_out_, ch_out,1,1)
+
 
     def forward(self,x):
         '''
