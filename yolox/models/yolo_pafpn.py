@@ -111,19 +111,16 @@ class YOLOPAFPN(nn.Module):
         fpn_out1 = self.reduce_conv1(f_out0)  # 512->256/16
         f_out1 = self.upsample(fpn_out1)  # 256/8
         f_out1 = torch.cat([f_out1, x2], 1)  # 256->512/8
-        # pan_out2 = self.C3_p3(f_out1)  # 512->256/8      
-        # pan_out2 = self.C3_p3_STA(f_out1)
-        pan_out2 = self.C3_p3_STR(f_out1)
+        pan_out2 = self.C3_p3(f_out1)  # 512->256/8      
+        # pan_out2 = self.C3_p3_STR(f_out1)
 
         p_out1 = self.bu_conv2(pan_out2)  # 256->256/16
         p_out1 = torch.cat([p_out1, fpn_out1], 1)  # 256->512/16
         pan_out1 = self.C3_n3(p_out1)  # 512->512/16
-        # pan_out1 = self.C3_n3_STA(p_out1)
 
         p_out0 = self.bu_conv1(pan_out1)  # 512->512/32
         p_out0 = torch.cat([p_out0, fpn_out0], 1)  # 512->1024/32
         pan_out0 = self.C3_n4(p_out0)  # 1024->1024/
-        # pan_out0 = self.C3_n4_STA(p_out0)
 
         outputs = (pan_out2, pan_out1, pan_out0)
         return outputs

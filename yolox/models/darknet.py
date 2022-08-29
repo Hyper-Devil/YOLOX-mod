@@ -139,13 +139,14 @@ class CSPDarknet(nn.Module):
         self.dark3 = nn.Sequential(
             Conv(base_channels * 2, base_channels * 4, 3, 2, act=act),
             # self.gnblock_dark3,
-            CSPLayer(
-                base_channels * 4,
-                base_channels * 4,
-                n=base_depth * 3,
-                depthwise=depthwise,
-                act=act,
-            ),
+            # CSPLayer(
+            #     base_channels * 4,
+            #     base_channels * 4,
+            #     n=base_depth * 3,
+            #     depthwise=depthwise,
+            #     act=act,
+            # ),
+            E_ELAN(base_channels * 4,base_channels * 4,depthwise=depthwise),
             ECAAttention(kernel_size=3),
         )
 
@@ -153,13 +154,14 @@ class CSPDarknet(nn.Module):
         self.dark4 = nn.Sequential(
             Conv(base_channels * 4, base_channels * 8, 3, 2, act=act),
             # self.gnblock_dark4,
-            CSPLayer(
-                base_channels * 8,
-                base_channels * 8,
-                n=base_depth * 3,
-                depthwise=depthwise,
-                act=act,
-            ),
+            # CSPLayer(
+            #     base_channels * 8,
+            #     base_channels * 8,
+            #     n=base_depth * 3,
+            #     depthwise=depthwise,
+            #     act=act,
+            # ),
+            E_ELAN(base_channels * 8,base_channels * 8,depthwise=depthwise),
             ECAAttention(kernel_size=3),
         )
 
@@ -176,7 +178,8 @@ class CSPDarknet(nn.Module):
             #     depthwise=depthwise,
             #     act=act,
             # ),
-            C3STR(base_channels * 16, base_channels * 16, 2),
+            E_ELAN(base_channels * 16,base_channels * 16,depthwise=depthwise),
+            # C3STR(base_channels * 16, base_channels * 16, 2),
             ECAAttention(kernel_size=3),
         )
 
