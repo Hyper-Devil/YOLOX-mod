@@ -128,7 +128,6 @@ class YOLOXHead(nn.Module):
         self.iou_loss = IOUloss(reduction="none")
         self.strides = strides
         self.grids = [torch.zeros(1)] * len(in_channels)
-        self.varifocal = VarifocalLoss(reduction='none')
 
 
     def initialize_biases(self, prior_prob):
