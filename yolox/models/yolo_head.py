@@ -128,6 +128,8 @@ class YOLOXHead(nn.Module):
         self.iou_loss = IOUloss(reduction="none")
         self.strides = strides
         self.grids = [torch.zeros(1)] * len(in_channels)
+        self.varifocal = VarifocalLoss(reduction='none')
+
 
     def initialize_biases(self, prior_prob):
         for conv in self.cls_preds:
@@ -391,9 +393,15 @@ class YOLOXHead(nn.Module):
         loss_iou = (
             self.iou_loss(bbox_preds.view(-1, 4)[fg_masks], reg_targets)
         ).sum() / num_fg
+        # loss_obj = (
+        #     self.bcewithlog_loss(obj_preds.view(-1, 1), obj_targets)
+        # ).sum() / num_fg
+        # loss_obj = (
+        #     self.varifocal(obj_preds.view(-1, 1), obj_targets)
+        # ).sum() / num_fg 
         loss_obj = (
-            self.bcewithlog_loss(obj_preds.view(-1, 1), obj_targets)
-        ).sum() / num_fg
+            self.focal_loss(obj_preds.sigmoid().view(-1, 1), obj_targets)
+        ).sum() / num_fg       
         loss_cls = (
             self.bcewithlog_loss(
                 cls_preds.view(-1, self.num_classes)[fg_masks], cls_targets
@@ -417,6 +425,14 @@ class YOLOXHead(nn.Module):
             loss_l1,
             num_fg / max(num_gts, 1),
         )
+        
+    def focal_loss(self, pred, gt):
+        pos_inds = gt.eq(1).float()
+        neg_inds = gt.eq(0).float()
+        pos_loss = torch.log(pred+1e-5) * torch.pow(1 - pred, 2) * pos_inds * 0.75
+        neg_loss = torch.log(1 - pred+1e-5) * torch.pow(pred, 2) * neg_inds * 0.25
+        loss = -(pos_loss + neg_loss)
+        return loss
 
     def get_l1_target(self, l1_target, gt, stride, x_shifts, y_shifts, eps=1e-8):
         l1_target[:, 0] = gt[:, 0] / stride - x_shifts
