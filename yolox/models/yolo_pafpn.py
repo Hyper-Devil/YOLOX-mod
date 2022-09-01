@@ -83,7 +83,7 @@ class YOLOPAFPN(nn.Module):
             depthwise=depthwise,
             act=act,
         )
-        self.C3_n4_HorBlock = Block(int(2 * in_channels[1] * width),0.,1e-6,gnconv,3)
+        self.C3_n4_HorBlock = Block(int(2 * in_channels[1] * width),0.,1e-6,gnconv,5)
         # self.C3_n4_STR = C3STR(int(2 * in_channels[1] * width), int(in_channels[2] * width), int(in_channels[2] * width // 16), 1)
 
         # 如果在yolox-s 640 下，012对应 128 256 512
