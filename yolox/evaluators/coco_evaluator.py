@@ -156,14 +156,14 @@ class COCOEvaluator:
             model = model_trt
         iouv = torch.linspace(0.5, 0.95, 10, device='cpu')
 
-        niou = iouv.numel()
-        confusion_matrix = ConfusionMatrix(nc=self.num_classes)
-        stats=[]
-        seen=0
-        names=["red","blue","yellow"] 
-        names_dic=dict(enumerate(names)) 
-        s = ('\n%20s' + '%11s' * 6) % ('Class', 'Images', 'Labels', 'P', 'R', 'mAP@.5', 'mAP@.5:.95')
-        save_dir='./'
+        # niou = iouv.numel()
+        # confusion_matrix = ConfusionMatrix(nc=self.num_classes)
+        # stats=[]
+        # seen=0
+        # names=["red","blue","yellow"] 
+        # names_dic=dict(enumerate(names)) 
+        # s = ('\n%20s' + '%11s' * 6) % ('Class', 'Images', 'Labels', 'P', 'R', 'mAP@.5', 'mAP@.5:.95')
+        # save_dir='./'
 
         for cur_iter, (imgs, _, info_imgs, ids) in enumerate(
             progress_bar(self.dataloader)
@@ -196,22 +196,22 @@ class COCOEvaluator:
             data_list.extend(data_list_elem)
             output_data.update(image_wise_data)
             
-            for _id,out in zip(ids,outputs):
-                seen += 1
-                gtAnn=self.dataloader.dataset.coco.imgToAnns[int(_id)]
-                tcls=[(its['category_id'])for its in gtAnn]
-                if out==None:
-                    stats.append((torch.zeros(0, niou, dtype=torch.bool), torch.Tensor(), torch.Tensor(), tcls))
-                    continue
-                else:
-                    gt=torch.tensor([[(its['category_id'])]+its['clean_bbox'] for its in gtAnn])
-                    dt=out.cpu().numpy()
-                    dt[:,4]=dt[:,4]*dt[:,5]
-                    dt[:,5]=dt[:,6]
-                    dt=torch.from_numpy(np.delete(dt,-1,axis=1))#share mem
-                    confusion_matrix.process_batch(dt, gt)
-                    correct = process_batch(dt, gt, iouv)
-                    stats.append((correct, dt[:, 4], dt[:, 5], tcls)) 
+            # for _id,out in zip(ids,outputs):
+            #     seen += 1
+            #     gtAnn=self.dataloader.dataset.coco.imgToAnns[int(_id)]
+            #     tcls=[(its['category_id'])for its in gtAnn]
+            #     if out==None:
+            #         stats.append((torch.zeros(0, niou, dtype=torch.bool), torch.Tensor(), torch.Tensor(), tcls))
+            #         continue
+            #     else:
+            #         gt=torch.tensor([[(its['category_id'])]+its['clean_bbox'] for its in gtAnn])
+            #         dt=out.cpu().numpy()
+            #         dt[:,4]=dt[:,4]*dt[:,5]
+            #         dt[:,5]=dt[:,6]
+            #         dt=torch.from_numpy(np.delete(dt,-1,axis=1))#share mem
+            #         confusion_matrix.process_batch(dt, gt)
+            #         correct = process_batch(dt, gt, iouv)
+            #         stats.append((correct, dt[:, 4], dt[:, 5], tcls)) 
 
         statistics = torch.cuda.FloatTensor([inference_time, nms_time, n_samples])
         if distributed:
@@ -224,17 +224,17 @@ class COCOEvaluator:
         eval_results = self.evaluate_prediction(data_list, statistics)
         synchronize()
 
-        stats = [np.concatenate(x, 0) for x in zip(*stats)]
-        tp, fp, p, r, f1, ap, ap_class =ap_per_class(*stats, plot=True, save_dir=save_dir, names=names_dic)
-        confusion_matrix.plot(save_dir=save_dir, names=names)
-        ap50, ap = ap[:, 0], ap.mean(1)  # AP@0.5, AP@0.5:0.95
-        mp, mr, map50, map = p.mean(), r.mean(), ap50.mean(), ap.mean()
-        nt = np.bincount(stats[3].astype(np.int64), minlength=self.num_classes)
-        pf = '\n%20s' + '%11i'  *2 + '%11.3g' * 4  # print format
-        s+=pf % ('all',seen, nt.sum(), mp, mr, map50, map)
-        for i, c in enumerate(ap_class):
-            s+=pf % (names[c],seen, nt[c], p[i], r[i], ap50[i], ap[i])
-        logger.info(s) 
+        # stats = [np.concatenate(x, 0) for x in zip(*stats)]
+        # tp, fp, p, r, f1, ap, ap_class =ap_per_class(*stats, plot=True, save_dir=save_dir, names=names_dic)
+        # confusion_matrix.plot(save_dir=save_dir, names=names)
+        # ap50, ap = ap[:, 0], ap.mean(1)  # AP@0.5, AP@0.5:0.95
+        # mp, mr, map50, map = p.mean(), r.mean(), ap50.mean(), ap.mean()
+        # nt = np.bincount(stats[3].astype(np.int64), minlength=self.num_classes)
+        # pf = '\n%20s' + '%11i'  *2 + '%11.3g' * 4  # print format
+        # s+=pf % ('all',seen, nt.sum(), mp, mr, map50, map)
+        # for i, c in enumerate(ap_class):
+        #     s+=pf % (names[c],seen, nt[c], p[i], r[i], ap50[i], ap[i])
+        # logger.info(s) 
 
         if return_outputs:
             return eval_results, output_data

@@ -9,6 +9,7 @@ from .darknet import CSPDarknet, EELAN
 from .network_blocks import BaseConv, CSPLayer, DWConv
 from .attention import SA, ECAAttention
 from .swintransformer import C3STR
+from .hornet import Block, gnconv
 
 class YOLOPAFPN(nn.Module):
     """
@@ -54,7 +55,7 @@ class YOLOPAFPN(nn.Module):
             depthwise=depthwise,
             act=act,
         )
-        self.C3_p3_STR = C3STR(int(2 * in_channels[0] * width), int(in_channels[0] * width))
+        # self.C3_p3_STR = C3STR(int(2 * in_channels[0] * width), int(in_channels[0] * width))
         
         # bottom-up conv
         self.bu_conv2 = Conv(
@@ -82,6 +83,7 @@ class YOLOPAFPN(nn.Module):
             depthwise=depthwise,
             act=act,
         )
+        self.C3_n4_HorBlock = Block(int(2 * in_channels[1] * width),0.,1e-6,gnconv,3)
         # self.C3_n4_STR = C3STR(int(2 * in_channels[1] * width), int(in_channels[2] * width), int(in_channels[2] * width // 16), 1)
 
         # 如果在yolox-s 640 下，012对应 128 256 512
@@ -120,7 +122,8 @@ class YOLOPAFPN(nn.Module):
 
         p_out0 = self.bu_conv1(pan_out1)  # 512->512/32
         p_out0 = torch.cat([p_out0, fpn_out0], 1)  # 512->1024/32
-        pan_out0 = self.C3_n4(p_out0)  # 1024->1024/
+        # pan_out0 = self.C3_n4(p_out0)  # 1024->1024/
+        pan_out0 = self.C3_n4_HorBlock(p_out0)
 
         outputs = (pan_out2, pan_out1, pan_out0)
         return outputs
