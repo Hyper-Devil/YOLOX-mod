@@ -138,14 +138,14 @@ class CSPDarknet(nn.Module):
         # dark3
         self.dark3 = nn.Sequential(
             Conv(base_channels * 2, base_channels * 4, 3, 2, act=act),
-            # CSPLayer(
-            #     base_channels * 4,
-            #     base_channels * 4,
-            #     n=base_depth * 3,
-            #     depthwise=depthwise,
-            #     act=act,
-            # ),
-            CNeB(base_channels * 4, base_channels * 4, 3),
+            CSPLayer(
+                base_channels * 4,
+                base_channels * 4,
+                n=base_depth * 3,
+                depthwise=depthwise,
+                act=act,
+            ),
+            # CNeB(base_channels * 4, base_channels * 4, 3),
             ECAAttention(kernel_size=3),
         )
 
