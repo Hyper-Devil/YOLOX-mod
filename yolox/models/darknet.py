@@ -8,6 +8,7 @@ from .network_blocks import MPConv, E_ELAN, BaseConv, CSPLayer, DWConv, Focus, R
 # from .hornet import Block, gnconv, LayerNorm
 from .swintransformer import C3STR
 from .attention import SA,ECAAttention
+from .convnext import CNeB
 
 class Darknet(nn.Module):
     # number of blocks from dark2 to dark5.
@@ -137,13 +138,14 @@ class CSPDarknet(nn.Module):
         # dark3
         self.dark3 = nn.Sequential(
             Conv(base_channels * 2, base_channels * 4, 3, 2, act=act),
-            CSPLayer(
-                base_channels * 4,
-                base_channels * 4,
-                n=base_depth * 3,
-                depthwise=depthwise,
-                act=act,
-            ),
+            # CSPLayer(
+            #     base_channels * 4,
+            #     base_channels * 4,
+            #     n=base_depth * 3,
+            #     depthwise=depthwise,
+            #     act=act,
+            # ),
+            CNeB(base_channels * 4, base_channels * 4, 3),
             ECAAttention(kernel_size=3),
         )
 
