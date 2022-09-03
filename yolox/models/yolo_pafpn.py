@@ -11,6 +11,7 @@ from .attention import SA, ECAAttention
 from .swintransformer import C3STR
 from .hornet import Block, gnconv
 from .asff import ASFF
+from .convnext import CNeB
 
 class YOLOPAFPN(nn.Module):
     """
@@ -73,6 +74,7 @@ class YOLOPAFPN(nn.Module):
             act=act,
         )
         # self.C3_n3_STR = C3STR(int(2 * in_channels[0] * width), int(in_channels[1] * width), int(in_channels[1] * width // 16), 1)
+        self.C3_n3_CNeB = CNeB(int(2 * in_channels[0] * width), int(in_channels[1] * width))
 
         # bottom-up conv
         self.bu_conv1 = Conv(
@@ -88,10 +90,11 @@ class YOLOPAFPN(nn.Module):
         )
         # self.C3_n4_HorBlock = Block(int(2 * in_channels[1] * width),0.,1e-6,gnconv,5)
         # self.C3_n4_STR = C3STR(int(2 * in_channels[1] * width), int(in_channels[2] * width), int(in_channels[2] * width // 16), 1)
+        self.C3_n4_CNeB = CNeB(int(2 * in_channels[1] * width), int(in_channels[2] * width))
 
-        self.asff_1 = ASFF(level = 0, multiplier = width)
-        self.asff_2 = ASFF(level = 1, multiplier = width)
-        self.asff_3 = ASFF(level = 2, multiplier = width)
+        # self.asff_1 = ASFF(level = 0, multiplier = width)
+        # self.asff_2 = ASFF(level = 1, multiplier = width)
+        # self.asff_3 = ASFF(level = 2, multiplier = width)
 
         # 如果在yolox-s 640 下，012对应 128 256 512
         # in_channels=[256, 512, 1024]
@@ -127,18 +130,20 @@ class YOLOPAFPN(nn.Module):
         
         p_out1 = self.bu_conv2(pan_out2)  # 256->256/16
         p_out1 = torch.cat([p_out1, fpn_out1], 1)  # 256->512/16
-        pan_out1 = self.C3_n3(p_out1)  # 512->512/16
+        # pan_out1 = self.C3_n3(p_out1)  # 512->512/16
+        pan_out1 = self.C3_n3_CNeB(p_out1) 
 
         p_out0 = self.bu_conv1(pan_out1)  # 512->512/32
         p_out0 = torch.cat([p_out0, fpn_out0], 1)  # 512->1024/32
-        pan_out0 = self.C3_n4(p_out0)  # 1024->1024/
+        # pan_out0 = self.C3_n4(p_out0)  # 1024->1024/
         # pan_out0 = self.C3_n4_HorBlock(p_out0)
+        pan_out0 = self.C3_n4_CNeB(p_out0) 
 
-        outputs = (pan_out2, pan_out1, pan_out0)
+        # outputs = (pan_out2, pan_out1, pan_out0)
         
-        pan_out0 = self.asff_1(outputs)
-        pan_out1 = self.asff_2(outputs)
-        pan_out2 = self.asff_3(outputs)
+        # pan_out0 = self.asff_1(outputs)
+        # pan_out1 = self.asff_2(outputs)
+        # pan_out2 = self.asff_3(outputs)
 
         outputs = (pan_out2, pan_out1, pan_out0)
         return outputs
