@@ -146,7 +146,7 @@ class CSPDarknet(nn.Module):
                 act=act,
             ),
             # CNeB(base_channels * 4, base_channels * 4, 3),
-            # ECAAttention(kernel_size=3),
+            ECAAttention(kernel_size=3),
         )
 
         # dark4
@@ -159,7 +159,7 @@ class CSPDarknet(nn.Module):
                 depthwise=depthwise,
                 act=act,
             ),
-            # ECAAttention(kernel_size=3),
+            ECAAttention(kernel_size=3),
         )
 
         # dark5
@@ -175,7 +175,7 @@ class CSPDarknet(nn.Module):
                 act=act,
             ),
             # C3STR(base_channels * 16, base_channels * 16, 2),
-            # ECAAttention(kernel_size=3),
+            ECAAttention(kernel_size=3),
         )
 
     def forward(self, x):
