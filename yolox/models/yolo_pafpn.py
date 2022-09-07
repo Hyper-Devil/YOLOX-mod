@@ -91,7 +91,7 @@ class YOLOPAFPN(nn.Module):
         )
         # self.C3_n4_HorBlock = Block(int(2 * in_channels[1] * width),0.,1e-6,gnconv,5)
         # self.C3_n4_STR = C3STR(int(2 * in_channels[1] * width), int(in_channels[2] * width), int(in_channels[2] * width // 16), 1)
-        self.C3_n4_CNeB = CNeB(int(2 * in_channels[1] * width), int(in_channels[2] * width))
+        # self.C3_n4_CNeB = CNeB(int(2 * in_channels[1] * width), int(in_channels[2] * width))
 
         # self.asff_1 = ASFF(level = 0, multiplier = width)
         # self.asff_2 = ASFF(level = 1, multiplier = width)
@@ -137,9 +137,9 @@ class YOLOPAFPN(nn.Module):
 
         p_out0 = self.bu_conv1(pan_out1)  # 512->512/32
         p_out0 = torch.cat([p_out0, fpn_out0], 1)  # 512->1024/32
-        # pan_out0 = self.C3_n4(p_out0)  # 1024->1024/
+        pan_out0 = self.C3_n4(p_out0)  # 1024->1024/
         # pan_out0 = self.C3_n4_HorBlock(p_out0)
-        pan_out0 = self.C3_n4_CNeB(p_out0) 
+        # pan_out0 = self.C3_n4_CNeB(p_out0) 
 
         # outputs = (pan_out2, pan_out1, pan_out0)
         
