@@ -106,7 +106,7 @@ class Trainer:
 
         loss = outputs["total_loss"]
 
-        self.optimizer.zero_grad()
+        self.optimizer.zero_grad(set_to_none=True)
         self.scaler.scale(loss).backward()
         self.scaler.step(self.optimizer)
         self.scaler.update()
