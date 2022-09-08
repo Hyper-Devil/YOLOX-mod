@@ -6,7 +6,6 @@ pynvml.nvmlInit()
 handle = pynvml.nvmlDeviceGetHandleByIndex(0)
 ratio = 1024**2
 while 1:
-    time.sleep(300)
     meminfo = pynvml.nvmlDeviceGetMemoryInfo(handle)
     total = meminfo.total/ratio  # 以兆M为单位就需要除以1024**2
     used = meminfo.used/ratio
@@ -14,8 +13,9 @@ while 1:
     print("total: ", total)
     print("used: ", used)
     print("free: ", free)
-    if used < total/8:
+    if used < total/12:
         print("start")
         os.system('python -m yolox.tools.train -f exps/example/custom/bit.py -d 1 -b 32 --fp16 --cache -o -expn 108 --logger wandb wandb-project YOLOX wandb-name 108-bit+3ECA+HorBlock')
         print("finish")
         break
+    time.sleep(300)
