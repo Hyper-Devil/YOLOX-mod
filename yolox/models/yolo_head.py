@@ -402,7 +402,7 @@ class YOLOXHead(nn.Module):
         #     self.bcewithlog_loss(
         #         cls_preds.view(-1, self.num_classes)[fg_masks], cls_targets
         #     )
-        ).sum() / num_fg
+        # ).sum() / num_fg
         if self.use_l1:
             loss_l1 = (
                 self.l1_loss(origin_preds.view(-1, 4)[fg_masks], l1_targets)
