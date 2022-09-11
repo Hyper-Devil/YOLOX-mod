@@ -7,7 +7,7 @@ from torch import nn
 from .network_blocks import MPConv, E_ELAN, BaseConv, CSPLayer, DWConv, Focus, ResLayer, SPPBottleneck
 # from .hornet import Block, gnconv, LayerNorm
 from .swintransformer import C3STR
-from .attention import SA,ECAAttention
+from .attention import SA,ECAAttention,eca_block
 from .convnext import CNeB
 
 class Darknet(nn.Module):
@@ -121,7 +121,8 @@ class CSPDarknet(nn.Module):
         # self.gnblock_dark5 = Block(dim=base_channels * 16, drop_path=0.,layer_scale_init_value=1e-6, gnconv=gnconv,order=2)
 
         # stem
-        self.stem = Focus(3, base_channels, ksize=3, act=act)
+        # self.stem = Focus(3, base_channels, ksize=3, act=act)
+        self.stem = BaseConv(3, base_channels, ksize=6, stride=2, act=act)
 
         # dark2
         self.dark2 = nn.Sequential(

@@ -15,7 +15,7 @@ while 1:
     print("free: ", free)
     if used < total/12:
         print("start")
-        os.system('python -m yolox.tools.train -f exps/example/custom/bit.py -d 1 -b 32 --fp16 --cache -o -expn 106 --logger wandb wandb-project YOLOX wandb-name 106-bit+3ECA+HorBlock')
+        os.system('python -m yolox.tools.train -f exps/example/custom/bit.py -d 1 -b 32 --fp16 --cache -o -expn 113 --logger wandb wandb-project YOLOX wandb-name 113-bit+3ECA+Focalloss+HorBlock')
         print("finish")
         break
     time.sleep(300)
