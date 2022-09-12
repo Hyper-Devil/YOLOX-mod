@@ -121,8 +121,8 @@ class CSPDarknet(nn.Module):
         # self.gnblock_dark5 = Block(dim=base_channels * 16, drop_path=0.,layer_scale_init_value=1e-6, gnconv=gnconv,order=2)
 
         # stem
-        # self.stem = Focus(3, base_channels, ksize=3, act=act)
-        self.stem = BaseConv(3, base_channels, ksize=6, stride=2, act=act)
+        self.stem = Focus(3, base_channels, ksize=3, act=act)
+        # self.stem = BaseConv(3, base_channels, ksize=6, stride=2, act=act)
 
         # dark2
         self.dark2 = nn.Sequential(
@@ -148,6 +148,7 @@ class CSPDarknet(nn.Module):
             ),
             # CNeB(base_channels * 4, base_channels * 4, 3),
             ECAAttention(kernel_size=3),
+            # eca_block(base_channels * 4)
         )
 
         # dark4
@@ -161,6 +162,7 @@ class CSPDarknet(nn.Module):
                 act=act,
             ),
             ECAAttention(kernel_size=3),
+            # eca_block(base_channels * 8)
         )
 
         # dark5
@@ -177,6 +179,7 @@ class CSPDarknet(nn.Module):
             ),
             # C3STR(base_channels * 16, base_channels * 16, 2),
             ECAAttention(kernel_size=3),
+            # eca_block(base_channels * 16)
         )
 
     def forward(self, x):
