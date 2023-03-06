@@ -199,7 +199,9 @@ dmypy.json
 Session.vim
 
 # Temporary
-.netrwhist
+.netrwhistfeat(logger): W&B logger with VOC datasets (#1525)
+
+feat(logger): W&B logger with VOC datasets
 # Auto-generated tag files
 tags
 # Persistent undo
@@ -221,3 +223,10 @@ events.out.tfevents*
 
 # vim
 .vim
+
+# OS generated files
+.DS_Store
+.DS_Store?
+.Trashes
+ehthumbs.db
+Thumbs.db

@@ -10,7 +10,8 @@ This repo is an implementation of PyTorch version YOLOX, there is also a [MegEng
 <img src="assets/git_fig.png" width="1000" >
 
 ## Updates!!
-* 【2022/04/14】 We suport jit compile op.
+* 【2023/02/28】 We support assignment visualization tool, see doc [here](./docs/assignment_visualization.md).
+* 【2022/04/14】 We support jit compile op.
 * 【2021/08/19】 We optimize the training process with **2x** faster training and **~1%** higher performance! See [notes](docs/updates_note.md) for more details.
 * 【2021/08/05】 We release [MegEngine version YOLOX](https://github.com/MegEngine/YOLOX).
 * 【2021/07/28】 We fix the fatal error of [memory leak](https://github.com/Megvii-BaseDetection/YOLOX/issues/103)
@@ -122,9 +123,9 @@ python -m yolox.tools.train -n yolox-s -d 8 -b 64 --fp16 -o [--cache]
 * -d: number of gpu devices
 * -b: total batch size, the recommended number for -b is num-gpu * 8
 * --fp16: mixed precision training
-* --cache: caching imgs into RAM to accelarate training, which need large system RAM. 
+* --cache: caching imgs into RAM to accelarate training, which need large system RAM.
 
-  
+
 
 When using -f, the above commands are equivalent to:
 ```shell
@@ -140,7 +141,8 @@ We also support multi-nodes training. Just add the following args:
 * --num\_machines: num of your total training nodes
 * --machine\_rank: specify the rank of each node
 
-Suppose you want to train YOLOX on 2 machines, and your master machines's IP is 123.123.123.123, use port 12312 and TCP.  
+Suppose you want to train YOLOX on 2 machines, and your master machines's IP is 123.123.123.123, use port 12312 and TCP.
+
 On master machine, run
 ```shell
 python tools/train.py -n yolox-s -b 128 --dist-url tcp://123.123.123.123:12312 --num_machines 2 --machine_rank 0
@@ -163,7 +165,8 @@ python tools/train.py -n yolox-s -d 8 -b 64 --fp16 -o [--cache] --logger wandb w
 
 An example wandb dashboard is available [here](https://wandb.ai/manan-goel/yolox-nano/runs/3pzfeom0)
 
-**Others**  
+**Others**
+
 See more information with the following command:
 ```shell
 python -m yolox.tools.train --help
@@ -202,7 +205,9 @@ python -m yolox.tools.eval -n  yolox-s -c yolox_s.pth -b 1 -d 1 --conf 0.001 --f
 <summary>Tutorials</summary>
 
 *  [Training on custom data](docs/train_custom_data.md)
+*  [Caching for custom data](docs/cache.md)
 *  [Manipulating training image size](docs/manipulate_training_image_size.md)
+*  [Assignment visualization](docs/assignment_visualization.md)
 *  [Freezing model](docs/freeze_module.md)
 
 </details>
@@ -210,15 +215,16 @@ python -m yolox.tools.eval -n  yolox-s -c yolox_s.pth -b 1 -d 1 --conf 0.001 --f
 ## Deployment
 
 
-1.  [MegEngine in C++ and Python](./demo/MegEngine)
-2.  [ONNX export and an ONNXRuntime](./demo/ONNXRuntime)
-3.  [TensorRT in C++ and Python](./demo/TensorRT)
-4.  [ncnn in C++ and Java](./demo/ncnn)
-5.  [OpenVINO in C++ and Python](./demo/OpenVINO)
-
+1. [MegEngine in C++ and Python](./demo/MegEngine)
+2. [ONNX export and an ONNXRuntime](./demo/ONNXRuntime)
+3. [TensorRT in C++ and Python](./demo/TensorRT)
+4. [ncnn in C++ and Java](./demo/ncnn)
+5. [OpenVINO in C++ and Python](./demo/OpenVINO)
+6. [Accelerate YOLOX inference with nebullvm in Python](./demo/nebullvm)
 
 ## Third-party resources
 * YOLOX for streaming perception: [StreamYOLO (CVPR 2022 Oral)](https://github.com/yancie-yjr/StreamYOLO)
+* The YOLOX-s and YOLOX-nano are Integrated into [ModelScope](https://www.modelscope.cn/home). Try out the Online Demo at [YOLOX-s](https://www.modelscope.cn/models/damo/cv_cspnet_image-object-detection_yolox/summary) and [YOLOX-Nano](https://www.modelscope.cn/models/damo/cv_cspnet_image-object-detection_yolox_nano_coco/summary) respectively 🚀.
 * Integrated into [Huggingface Spaces 🤗](https://huggingface.co/spaces) using [Gradio](https://github.com/gradio-app/gradio). Try out the Web Demo: [![Hugging Face Spaces](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Spaces-blue)](https://huggingface.co/spaces/Sultannn/YOLOX-Demo)
 * The ncnn android app with video support: [ncnn-android-yolox](https://github.com/FeiGeChuanShu/ncnn-android-yolox) from [FeiGeChuanShu](https://github.com/FeiGeChuanShu)
 * YOLOX with Tengine support: [Tengine](https://github.com/OAID/Tengine/blob/tengine-lite/examples/tm_yolox.cpp) from [BUG1989](https://github.com/BUG1989)
@@ -239,8 +245,8 @@ If you use YOLOX in your research, please cite our work by using the following B
 }
 ```
 ## In memory of Dr. Jian Sun
-Without the guidance of [Dr. Sun Jian](http://www.jiansun.org/), YOLOX would not have been released and open sourced to the community.
-The passing away of Dr. Sun Jian is a great loss to the Computer Vision field. We have added this section here to express our remembrance and condolences to our captain Dr. Sun.
+Without the guidance of [Dr. Jian Sun](http://www.jiansun.org/), YOLOX would not have been released and open sourced to the community.
+The passing away of Dr. Jian is a huge loss to the Computer Vision field. We add this section here to express our remembrance and condolences to our captain Dr. Jian.
 It is hoped that every AI practitioner in the world will stick to the concept of "continuous innovation to expand cognitive boundaries, and extraordinary technology to achieve product value" and move forward all the way.
 
 <div align="center"><img src="assets/sunjian.png" width="200"></div>
