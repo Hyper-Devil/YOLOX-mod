@@ -58,8 +58,8 @@ class YOLOPAFPN(nn.Module):
             act=act,
         )
         # self.C3_p3_STR = C3STR(int(2 * in_channels[0] * width), int(in_channels[0] * width))
-        # self.C3_p3_HorBlock = Block(int(2 * in_channels[0] * width),0.,1e-6,gnconv,3)
         # self.change_chn = BaseConv(int(2 * in_channels[0] * width), int(in_channels[0] * width), 1, 1)
+        # self.C3_p3_HorBlock = Block(int(in_channels[0] * width),0.,1e-6,gnconv,3)
 
         # bottom-up conv
         self.bu_conv2 = Conv(
@@ -126,8 +126,8 @@ class YOLOPAFPN(nn.Module):
         f_out1 = torch.cat([f_out1, x2], 1)  # 256->512/8
         pan_out2 = self.C3_p3(f_out1)  # 512->256/8      
         # pan_out2 = self.C3_p3_STR(f_out1)
+        # f_out1 = self.change_chn(f_out1)
         # pan_out2 = self.C3_p3_HorBlock(f_out1)
-        # pan_out2 = self.change_chn(pan_out2)
         
         p_out1 = self.bu_conv2(pan_out2)  # 256->256/16
         p_out1 = torch.cat([p_out1, fpn_out1], 1)  # 256->512/16

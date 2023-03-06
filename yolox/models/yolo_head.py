@@ -392,12 +392,12 @@ class YOLOXHead(nn.Module):
         loss_iou = (
             self.iou_loss(bbox_preds.view(-1, 4)[fg_masks], reg_targets)
         ).sum() / num_fg
-        loss_obj = (
-            self.bcewithlog_loss(obj_preds.view(-1, 1), obj_targets)
-        ).sum() / num_fg
         # loss_obj = (
-        #     self.focal_loss(obj_preds.sigmoid().view(-1, 1), obj_targets)
-        # ).sum() / num_fg       
+        #     self.bcewithlog_loss(obj_preds.view(-1, 1), obj_targets)
+        # ).sum() / num_fg
+        loss_obj = (
+            self.focal_loss(obj_preds.sigmoid().view(-1, 1), obj_targets)
+        ).sum() / num_fg       
         loss_cls = (
             self.bcewithlog_loss(
                 cls_preds.view(-1, self.num_classes)[fg_masks], cls_targets

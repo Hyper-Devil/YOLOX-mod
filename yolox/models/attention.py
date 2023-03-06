@@ -70,6 +70,45 @@ class ECAAttention(nn.Module):
         y=y.permute(0,2,1).unsqueeze(-1) #bs,c,1,1
         return x*y.expand_as(x)
 
+class eca_block(nn.Module):
+    # 初始化, in_channel代表特征图的输入通道数, b和gama代表公式中的两个系数
+    def __init__(self, in_channel, b=1, gama=2):
+        # 继承父类初始化
+        super(eca_block, self).__init__()
+        
+        # 根据输入通道数自适应调整卷积核大小
+        kernel_size = int(abs((math.log(in_channel, 2)+b)/gama))
+        if kernel_size % 2:
+            kernel_size = kernel_size
+        # 如果卷积核大小是偶数，就把它变成奇数
+        else:
+            kernel_size = kernel_size - 1
+        print("kernel_size: ",kernel_size)
+        self.gap=nn.AdaptiveAvgPool2d(1)
+        self.conv=nn.Conv1d(1,1,kernel_size=kernel_size,padding=(kernel_size-1)//2)
+        self.sigmoid=nn.Sigmoid()
+
+    def init_weights(self):
+        for m in self.modules():
+            if isinstance(m, nn.Conv2d):
+                init.kaiming_normal_(m.weight, mode='fan_out')
+                if m.bias is not None:
+                    init.constant_(m.bias, 0)
+            elif isinstance(m, nn.BatchNorm2d):
+                init.constant_(m.weight, 1)
+                init.constant_(m.bias, 0)
+            elif isinstance(m, nn.Linear):
+                init.normal_(m.weight, std=0.001)
+                if m.bias is not None:
+                    init.constant_(m.bias, 0)
+
+    def forward(self, x):
+        y=self.gap(x) #bs,c,1,1
+        y=y.squeeze(-1).permute(0,2,1) #bs,1,c
+        y=self.conv(y) #bs,1,c
+        y=self.sigmoid(y) #bs,1,c
+        y=y.permute(0,2,1).unsqueeze(-1) #bs,c,1,1
+        return x*y.expand_as(x)
 
 # ICASSP2021 论文中比ECA效果好
 class SA(nn.Module):
@@ -155,3 +194,5 @@ class NAM(nn.Module):
         x_out1=self.Channel_NAM(x)
  
         return x_out1  
+
+
