@@ -239,3 +239,4 @@ Thumbs.db
 # tensorrt
 demo/TensorRT/cpp/CMakeCache.txt
 demo/TensorRT/cpp/Makefile
+demo/TensorRT/cpp/yolox_class

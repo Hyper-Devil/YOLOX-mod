@@ -27,7 +27,7 @@
 #define NMS_THRESH 0.45
 #define BBOX_CONF_THRESH 0.3
 
-using namespace nvinfer1;
+// using namespace nvinfer1;
 
 class Detect
 {
@@ -69,16 +69,16 @@ public:
     float *blobFromImage(cv::Mat &img);
     static void decode_outputs(float *prob, std::vector<Object> &objects, float scale, const int img_w, const int img_h);
     static void draw_objects(const cv::Mat &bgr, const std::vector<Object> &objects, std::string f);
-    void doInference(IExecutionContext &context, float *input, float *output, const int output_size, cv::Size input_shape);
+    void doInference(nvinfer1::IExecutionContext &context, float *input, float *output, const int output_size, cv::Size input_shape);
     static const char *class_names[];
     const static float color_list[80][3];
     
     void detect_forward(cv::Mat &img);
     void convert_object2bbox(std::vector<Object> &objects, std::vector<bbox_t> &bbox_detected);
 
-    ICudaEngine *engine;
-    IRuntime *runtime;
-    IExecutionContext *context;
+    nvinfer1::ICudaEngine *engine;
+    nvinfer1::IRuntime *runtime;
+    nvinfer1::IExecutionContext *context;
     float *blob;
     static float *prob;
     int output_size;

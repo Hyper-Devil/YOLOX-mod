@@ -38,7 +38,7 @@ Detect::Detect()
     // return -1;
     //}
 
-    runtime = createInferRuntime(gLogger);
+    runtime = nvinfer1::createInferRuntime(gLogger);
     assert(runtime != nullptr);
     engine = runtime->deserializeCudaEngine(trtModelStream, size);
     assert(engine != nullptr);
@@ -75,6 +75,7 @@ Detect::~Detect()
 
 void Detect::detect_forward(cv::Mat &img)
 {
+    auto start = std::chrono::system_clock::now();
     img_w = img.cols;
     img_h = img.rows;
     cv::Mat pr_img = static_resize(img);
@@ -83,16 +84,21 @@ void Detect::detect_forward(cv::Mat &img)
     scale = std::min(INPUT_W / (img.cols * 1.0), INPUT_H / (img.rows * 1.0));
 
     // run inference
-    auto start = std::chrono::system_clock::now();
+    auto before = std::chrono::system_clock::now();
     doInference(*context, blob, prob, output_size, pr_img.size());
-    auto end = std::chrono::system_clock::now();
-    std::cout << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms" << std::endl;
-
+    auto after = std::chrono::system_clock::now();
     
     decode_outputs(prob, objects, scale, img_w, img_h);
     // draw_objects(img, objects, input_image_path);
 
     convert_object2bbox(objects, bbox_detected); //转化为darknet中格式
+
+    auto end = std::chrono::system_clock::now();
+    std::cout << "pre process: " << std::chrono::duration_cast<std::chrono::milliseconds>(before - start).count() << "ms" << std::endl;
+    std::cout << "Inference: " << std::chrono::duration_cast<std::chrono::milliseconds>(after - before).count() << "ms" << std::endl;
+    std::cout << "post process: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - after).count() << "ms" << std::endl;
+    std::cout << "total: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms" << std::endl;
+
 }
 
 void Detect::convert_object2bbox(std::vector<Object> &objects, std::vector<bbox_t> &bbox_detected)
@@ -391,9 +397,9 @@ void Detect::draw_objects(const cv::Mat &bgr, const std::vector<Object> &objects
     /* cv::waitKey(0); */
 }
 
-void Detect::doInference(IExecutionContext &context, float *input, float *output, const int output_size, cv::Size input_shape)
+void Detect::doInference(nvinfer1::IExecutionContext &context, float *input, float *output, const int output_size, cv::Size input_shape)
 {
-    const ICudaEngine &engine = context.getEngine();
+    const nvinfer1::ICudaEngine &engine = context.getEngine();
 
     // Pointers to input and output device buffers to pass to engine.
     // Engine requires exactly IEngine::getNbBindings() number of buffers.
