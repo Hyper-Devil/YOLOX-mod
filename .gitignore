@@ -6,6 +6,9 @@ YOLOX_outputs/
 datasets/
 wandb/
 artifacts/
+demo/TensorRT/cpp/CMakeFiles
+demo/TensorRT/cpp/*.jpg
+
 # do not ignore datasets under yolox/data
 !*yolox/data/datasets/
 
@@ -27,6 +30,7 @@ artifacts/
 
 # CMake
 cmake-build-*/
+*.cmake
 
 # Mongo Explorer plugin
 .idea/**/mongoSettings.xml
@@ -69,6 +73,7 @@ __pycache__/
 
 # C extensions
 *.so
+demo/TensorRT/cpp/yolox
 
 # Distribution / packaging
 .Python
@@ -230,3 +235,7 @@ events.out.tfevents*
 .Trashes
 ehthumbs.db
 Thumbs.db
+
+# tensorrt
+demo/TensorRT/cpp/CMakeCache.txt
+demo/TensorRT/cpp/Makefile
